@@ -1,4 +1,4 @@
-import { getProgressColor } from '../utils/progress';
+import { trafficLight } from '../utils/trafficLight';
 
 interface ProgressRingProps {
   percentage: number;
@@ -11,7 +11,14 @@ export function ProgressRing({ percentage, size = 60, strokeWidth = 6, color }: 
   const radius = (size - strokeWidth) / 2;
   const circumference = radius * 2 * Math.PI;
   const offset = circumference - (percentage / 100) * circumference;
-  const ringColor = color || getProgressColor(percentage);
+
+  const status = trafficLight(percentage);
+  const ringColor = color || (
+    status === 'red' ? 'var(--tl-red)' :
+    status === 'amber' ? 'var(--tl-amber)' :
+    status === 'green' ? 'var(--tl-green)' :
+    'var(--tl-done)'
+  );
 
   return (
     <div className="relative inline-flex items-center justify-center">

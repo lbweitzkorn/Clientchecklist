@@ -6,6 +6,7 @@ import { ProgressRing } from '../components/ProgressRing';
 import { calculateBlockProgress, calculateTimelineProgress, calculateProgressByAssignee } from '../utils/progress';
 import { calculateLeadTimeMonths, calculateScaleFactor } from '../utils/recalibration';
 import { calculateCountdown } from '../utils/countdown';
+import { trafficLight, trafficLabel } from '../utils/trafficLight';
 import { getEventSourceHead, updateEventDate, recalcTimeline } from '../api/events';
 import { BRAND } from '../config/brand';
 import themes, { type ThemeKey } from '../lib/themes';
@@ -578,6 +579,19 @@ export function TimelineDetail() {
               <div className="text-xs text-gray-500 mt-1">
                 {progress?.completedTasks} / {progress?.totalTasks} tasks
               </div>
+              {(() => {
+                const overall = progress?.percentage || 0;
+                const status = trafficLight(overall);
+                return (
+                  <span className={`mt-2 badge ${
+                    status === 'red' ? 'bg-tl-red' :
+                    status === 'amber' ? 'bg-tl-amber' :
+                    status === 'green' ? 'bg-tl-green' : 'bg-tl-done'
+                  }`}>
+                    {trafficLabel(status)}
+                  </span>
+                );
+              })()}
             </div>
 
             <div className="bg-blue-50 rounded-lg p-4 flex flex-col items-center kpi">
@@ -768,19 +782,47 @@ export function TimelineDetail() {
 
             return (
               <div key={block.id} className="block-card border border-gray-200 print-block">
-                <h2 className="block-title hidden print:block">{block.title}</h2>
+                <div className="hidden print:flex items-center justify-between mb-3">
+                  <h2 className="block-title m-0 border-0 pb-0">{block.title}</h2>
+                  {blockProgress && (() => {
+                    const blockStatus = trafficLight(blockProgress.percentage);
+                    return (
+                      <span className={`badge ${
+                        blockStatus === 'red' ? 'bg-tl-red' :
+                        blockStatus === 'amber' ? 'bg-tl-amber' :
+                        blockStatus === 'green' ? 'bg-tl-green' : 'bg-tl-done'
+                      }`}>
+                        {blockProgress.percentage}% — {trafficLabel(blockStatus)}
+                      </span>
+                    );
+                  })()}
+                </div>
                 <button
                   onClick={() => toggleBlock(block.id)}
                   className="w-full flex items-center justify-between p-6 text-left hover:bg-gray-50 transition-colors print:hidden"
                 >
                   <div className="flex items-center gap-4 flex-1">
                     {blockProgress && <ProgressRing percentage={blockProgress.percentage} />}
-                    <div>
+                    <div className="flex-1">
                       <h3 className="text-lg font-semibold text-gray-900">{block.title}</h3>
                       {blockProgress && (
-                        <p className="text-sm text-gray-600 mt-1">
-                          {blockProgress.completedTasks} of {blockProgress.totalTasks} tasks complete
-                        </p>
+                        <div className="flex items-center gap-3 mt-1">
+                          <p className="text-sm text-gray-600">
+                            {blockProgress.completedTasks} of {blockProgress.totalTasks} tasks complete
+                          </p>
+                          {(() => {
+                            const blockStatus = trafficLight(blockProgress.percentage);
+                            return (
+                              <span className={`badge text-xs ${
+                                blockStatus === 'red' ? 'bg-tl-red' :
+                                blockStatus === 'amber' ? 'bg-tl-amber' :
+                                blockStatus === 'green' ? 'bg-tl-green' : 'bg-tl-done'
+                              }`}>
+                                {trafficLabel(blockStatus)}
+                              </span>
+                            );
+                          })()}
+                        </div>
                       )}
                     </div>
                   </div>
