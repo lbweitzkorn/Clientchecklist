@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { Calendar, MapPin, ExternalLink, Upload } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import { BRAND } from '../config/brand';
+import { calculateCountdown } from '../utils/countdown';
 import type { Timeline } from '../types';
 
 export function TimelineList() {
@@ -250,10 +251,27 @@ export function TimelineList() {
                     </h3>
                     <div className="flex items-center gap-4 text-sm text-gray-600">
                       {timeline.event?.date && (
-                        <div className="flex items-center gap-1">
-                          <Calendar size={16} />
-                          {formatDate(timeline.event.date)}
-                        </div>
+                        <>
+                          <div className="flex items-center gap-1">
+                            <Calendar size={16} />
+                            {formatDate(timeline.event.date)}
+                          </div>
+                          {(() => {
+                            const countdown = calculateCountdown(timeline.event.date);
+                            if (!countdown) return null;
+                            return (
+                              <div className={`flex items-center gap-1 px-2 py-1 rounded-md font-medium ${
+                                countdown.isToday
+                                  ? 'bg-green-100 text-green-700'
+                                  : countdown.isPast
+                                  ? 'bg-red-100 text-red-700'
+                                  : 'bg-blue-100 text-blue-700'
+                              }`}>
+                                {countdown.formatted}
+                              </div>
+                            );
+                          })()}
+                        </>
                       )}
                       {timeline.event?.venue && (
                         <div className="flex items-center gap-1">

@@ -5,6 +5,7 @@ import { supabase } from '../lib/supabase';
 import { ProgressRing } from '../components/ProgressRing';
 import { calculateBlockProgress, calculateTimelineProgress, calculateProgressByAssignee } from '../utils/progress';
 import { calculateLeadTimeMonths, calculateScaleFactor } from '../utils/recalibration';
+import { calculateCountdown } from '../utils/countdown';
 import { getEventSourceHead, updateEventDate, recalcTimeline } from '../api/events';
 import { BRAND } from '../config/brand';
 import themes, { type ThemeKey } from '../lib/themes';
@@ -437,8 +438,26 @@ export function TimelineDetail() {
           <div className="text-sm font-medium text-gray-900">
             {timeline.event?.code} — {timeline.event?.title}
           </div>
-          <div className="text-xs text-gray-600">
-            {timeline.event?.date && formatDate(timeline.event.date)} • Overall progress: {progress?.percentage || 0}%
+          <div className="text-xs text-gray-600 flex items-center gap-2">
+            <span>
+              {timeline.event?.date && formatDate(timeline.event.date)}
+            </span>
+            {(() => {
+              const countdown = calculateCountdown(timeline.event?.date);
+              if (!countdown) return null;
+              return (
+                <span className={`px-2 py-0.5 rounded font-semibold ${
+                  countdown.isToday
+                    ? 'bg-green-100 text-green-700'
+                    : countdown.isPast
+                    ? 'bg-red-100 text-red-700'
+                    : 'bg-blue-100 text-blue-700'
+                }`}>
+                  {countdown.formatted}
+                </span>
+              );
+            })()}
+            <span>• Overall progress: {progress?.percentage || 0}%</span>
           </div>
         </div>
       </div>
@@ -519,6 +538,21 @@ export function TimelineDetail() {
                     >
                       Save
                     </button>
+                    {(() => {
+                      const countdown = calculateCountdown(timeline.event.date);
+                      if (!countdown) return null;
+                      return (
+                        <div className={`flex items-center gap-1 px-3 py-2 rounded-md font-semibold text-sm ${
+                          countdown.isToday
+                            ? 'bg-green-100 text-green-700'
+                            : countdown.isPast
+                            ? 'bg-red-100 text-red-700'
+                            : 'bg-blue-100 text-blue-700'
+                        }`}>
+                          {countdown.formatted}
+                        </div>
+                      );
+                    })()}
                   </div>
                   <small className="text-xs text-gray-500">Changes here sync to JS Live for {timeline.event?.code}</small>
                 </div>
