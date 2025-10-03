@@ -457,8 +457,10 @@ export function TimelineDetail() {
 
   const includeGeneral = timeline.include_general_in_totals ?? true;
   const allTasks = timeline.blocks?.flatMap((block) => block.tasks || []) || [];
+  const generalTasks = timeline.blocks?.filter(b => b.is_general).flatMap((block) => block.tasks || []) || [];
   const progress = timeline.blocks ? calculateTimelineProgress(timeline.blocks, includeGeneral) : null;
   const progressByAssignee = calculateProgressByAssignee(allTasks);
+  const generalProgress = calculateBlockProgress(generalTasks);
 
   const themeKey = timeline.template_key as ThemeKey;
   const backgroundImage = themes[themeKey] || themes.wedding;
@@ -633,9 +635,9 @@ export function TimelineDetail() {
             </div>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-4 print-kpis">
+          <div className="grid grid-cols-1 md:grid-cols-5 gap-3 mb-4 print-kpis">
             <div className="bg-gray-50 rounded-lg p-4 flex flex-col items-center kpi">
-              <ProgressRing percentage={progress?.percentage || 0} size={70} strokeWidth={7} />
+              <ProgressRing percentage={progress?.percentage || 0} size={60} strokeWidth={6} />
               <div className="text-sm text-gray-600 text-center font-medium mt-2">
                 Overall Progress
               </div>
@@ -658,7 +660,7 @@ export function TimelineDetail() {
             </div>
 
             <div className="bg-blue-50 rounded-lg p-4 flex flex-col items-center kpi">
-              <ProgressRing percentage={progressByAssignee.client.percentage} size={70} strokeWidth={7} color="#3b82f6" />
+              <ProgressRing percentage={progressByAssignee.client.percentage} size={60} strokeWidth={6} color="#3b82f6" />
               <div className="text-sm text-blue-700 text-center font-medium mt-2">
                 Client Involved
               </div>
@@ -668,7 +670,7 @@ export function TimelineDetail() {
             </div>
 
             <div className="bg-purple-50 rounded-lg p-4 flex flex-col items-center kpi">
-              <ProgressRing percentage={progressByAssignee.js.percentage} size={70} strokeWidth={7} color="#a855f7" />
+              <ProgressRing percentage={progressByAssignee.js.percentage} size={60} strokeWidth={6} color="#a855f7" />
               <div className="text-sm text-purple-700 text-center font-medium mt-2">
                 JustSeventy Involved
               </div>
@@ -678,12 +680,22 @@ export function TimelineDetail() {
             </div>
 
             <div className="bg-green-50 rounded-lg p-4 flex flex-col items-center kpi">
-              <ProgressRing percentage={progressByAssignee.joint.percentage} size={70} strokeWidth={7} color="#10b981" />
+              <ProgressRing percentage={progressByAssignee.joint.percentage} size={60} strokeWidth={6} color="#10b981" />
               <div className="text-sm text-green-700 text-center font-medium mt-2">
                 Joint Tasks
               </div>
               <div className="text-xs text-green-600 mt-1">
                 {progressByAssignee.joint.completedTasks} / {progressByAssignee.joint.totalTasks} tasks
+              </div>
+            </div>
+
+            <div className="bg-amber-50 rounded-lg p-4 flex flex-col items-center kpi">
+              <ProgressRing percentage={generalProgress.percentage} size={60} strokeWidth={6} color="#f59e0b" />
+              <div className="text-sm text-amber-700 text-center font-medium mt-2">
+                General Tasks
+              </div>
+              <div className="text-xs text-amber-600 mt-1">
+                {generalProgress.completedTasks} / {generalProgress.totalTasks} tasks
               </div>
             </div>
           </div>
