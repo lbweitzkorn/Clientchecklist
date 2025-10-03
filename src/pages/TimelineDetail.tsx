@@ -32,6 +32,12 @@ export function TimelineDetail() {
   const [pendingNewDate, setPendingNewDate] = useState<string|undefined>(undefined);
   const pollRef = useRef<number | null>(null);
 
+  const [showAddTask, setShowAddTask] = useState(false);
+  const [newTaskTitle, setNewTaskTitle] = useState('');
+  const [newTaskAssignee, setNewTaskAssignee] = useState<'client' | 'js' | 'joint'>('client');
+  const [newTaskDueDate, setNewTaskDueDate] = useState('');
+  const [newTaskWeight, setNewTaskWeight] = useState(1);
+
   const isDirty = localDate && initialDate && localDate !== initialDate;
 
   useEffect(() => {
@@ -232,6 +238,62 @@ export function TimelineDetail() {
     });
   }
 
+  async function handleAddGeneralTask() {
+    if (!timeline || !newTaskTitle.trim()) return;
+
+    const generalBlock = timeline.blocks?.find(b => b.is_general);
+    if (!generalBlock) return;
+
+    try {
+      const maxOrder = Math.max(0, ...(generalBlock.tasks?.map(t => t.order) || [0]));
+
+      const { error } = await supabase
+        .from('tasks')
+        .insert({
+          timeline_id: timeline.id,
+          block_id: generalBlock.id,
+          title: newTaskTitle.trim(),
+          assignee: newTaskAssignee,
+          weight: newTaskWeight,
+          is_skeleton: false,
+          done: false,
+          due_date: newTaskDueDate || null,
+          order: maxOrder + 1,
+        });
+
+      if (error) throw error;
+
+      setNewTaskTitle('');
+      setNewTaskAssignee('client');
+      setNewTaskDueDate('');
+      setNewTaskWeight(1);
+      setShowAddTask(false);
+
+      loadTimeline(timeline.id);
+    } catch (error) {
+      console.error('Error adding task:', error);
+      alert('Failed to add task');
+    }
+  }
+
+  async function handleToggleGeneralSetting(field: 'allow_client_task_create' | 'include_general_in_totals', value: boolean) {
+    if (!timeline) return;
+
+    try {
+      const { error } = await supabase
+        .from('timelines')
+        .update({ [field]: value })
+        .eq('id', timeline.id);
+
+      if (error) throw error;
+
+      setTimeline({ ...timeline, [field]: value });
+    } catch (error) {
+      console.error('Error updating setting:', error);
+      alert('Failed to update setting');
+    }
+  }
+
   function getAssigneeColor(assignee: string): string {
     switch (assignee) {
       case 'client':
@@ -393,8 +455,9 @@ export function TimelineDetail() {
     );
   }
 
+  const includeGeneral = timeline.include_general_in_totals ?? true;
   const allTasks = timeline.blocks?.flatMap((block) => block.tasks || []) || [];
-  const progress = timeline.blocks ? calculateTimelineProgress(timeline.blocks) : null;
+  const progress = timeline.blocks ? calculateTimelineProgress(timeline.blocks, includeGeneral) : null;
   const progressByAssignee = calculateProgressByAssignee(allTasks);
 
   const themeKey = timeline.template_key as ThemeKey;
@@ -772,11 +835,35 @@ export function TimelineDetail() {
                 </p>
               </div>
             </div>
+
+            <div className="mt-6 border-t border-gray-200 pt-6">
+              <h3 className="text-lg font-semibold text-gray-900 mb-4">General Tasks Settings</h3>
+              <div className="space-y-3">
+                <label className="flex items-center gap-2">
+                  <input
+                    type="checkbox"
+                    checked={timeline.include_general_in_totals ?? true}
+                    onChange={(e) => handleToggleGeneralSetting('include_general_in_totals', e.target.checked)}
+                    className="w-4 h-4 text-blue-600 rounded"
+                  />
+                  <span className="text-sm text-gray-700">Include General Tasks in overall progress</span>
+                </label>
+                <label className="flex items-center gap-2">
+                  <input
+                    type="checkbox"
+                    checked={timeline.allow_client_task_create ?? false}
+                    onChange={(e) => handleToggleGeneralSetting('allow_client_task_create', e.target.checked)}
+                    className="w-4 h-4 text-blue-600 rounded"
+                  />
+                  <span className="text-sm text-gray-700">Allow clients to add tasks in General block</span>
+                </label>
+              </div>
+            </div>
           </div>
         </div>
 
         <div className="space-y-4 print-columns">
-          {timeline.blocks?.map((block) => {
+          {timeline.blocks?.filter(b => !b.is_general).map((block) => {
             const blockProgress = block.tasks ? calculateBlockProgress(block.tasks) : null;
             const isExpanded = expandedBlocks.has(block.id);
 
@@ -835,6 +922,185 @@ export function TimelineDetail() {
                       <div
                         key={task.id}
                         className="task-card flex items-start gap-3 p-3 rounded-lg hover:bg-gray-50 transition-colors"
+                      >
+                        <input
+                          type="checkbox"
+                          checked={task.done}
+                          onChange={() => handleTaskToggle(task)}
+                          className="mt-1 w-5 h-5 rounded border-gray-300 text-blue-600 focus:ring-blue-500 cursor-pointer print:w-4 print:h-4"
+                        />
+                        <div className="flex-1">
+                          <p className={`task-title text-gray-900 ${task.done ? 'line-through opacity-60' : ''}`}>
+                            {task.title}
+                          </p>
+                          <div className="task-meta flex items-center gap-2 mt-1">
+                            <button
+                              onClick={() => handleAssigneeChange(task)}
+                              className={`px-2 py-0.5 text-xs font-medium rounded transition-all hover:ring-2 hover:ring-offset-1 ${getAssigneeColor(task.assignee)} ${
+                                task.assignee === 'client' ? 'hover:ring-blue-300' :
+                                task.assignee === 'js' ? 'hover:ring-purple-300' :
+                                'hover:ring-green-300'
+                              } cursor-pointer print:cursor-default`}
+                              title="Click to change assignee"
+                            >
+                              {task.assignee}
+                            </button>
+                            {task.is_skeleton && (
+                              <span className="px-2 py-0.5 text-xs font-medium rounded bg-orange-100 text-orange-700">
+                                Key Task
+                              </span>
+                            )}
+                            <span className="text-xs text-gray-500">Weight: {task.weight}</span>
+                            {task.due_date && (
+                              <span className="text-xs text-gray-500">
+                                Due: {new Date(task.due_date).toLocaleDateString()}
+                              </span>
+                            )}
+                            <button
+                              onClick={() => handleTaskLockToggle(task)}
+                              className={`ml-auto p-1 rounded transition-colors ${
+                                task.locked
+                                  ? 'text-orange-600 hover:bg-orange-100'
+                                  : 'text-gray-400 hover:bg-gray-100'
+                              }`}
+                              title={task.locked ? 'Task locked (won\'t be recalculated)' : 'Click to lock task'}
+                            >
+                              {task.locked ? <Lock size={14} /> : <Unlock size={14} />}
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            );
+          })}
+
+          {timeline.blocks?.filter(b => b.is_general).map((block) => {
+            const blockProgress = block.tasks ? calculateBlockProgress(block.tasks) : null;
+            const isExpanded = expandedBlocks.has(block.id);
+
+            return (
+              <div key={block.id} className="block-card border border-gray-200 print-block bg-gray-50">
+                <div className="hidden print:flex items-center justify-between mb-3">
+                  <h2 className="block-title m-0 border-0 pb-0">{block.title}</h2>
+                  {blockProgress && (() => {
+                    const blockStatus = trafficLight(blockProgress.percentage);
+                    return (
+                      <span className={`badge ${
+                        blockStatus === 'red' ? 'bg-tl-red' :
+                        blockStatus === 'amber' ? 'bg-tl-amber' :
+                        blockStatus === 'green' ? 'bg-tl-green' : 'bg-tl-done'
+                      }`}>
+                        {blockProgress.percentage}% — {trafficLabel(blockStatus)}
+                      </span>
+                    );
+                  })()}
+                </div>
+                <button
+                  onClick={() => toggleBlock(block.id)}
+                  className="w-full flex items-center justify-between p-6 text-left hover:bg-gray-100 transition-colors print:hidden"
+                >
+                  <div className="flex items-center gap-4 flex-1">
+                    {blockProgress && <ProgressRing percentage={blockProgress.percentage} />}
+                    <div className="flex-1">
+                      <h3 className="text-lg font-semibold text-gray-900">{block.title}</h3>
+                      {blockProgress && (
+                        <div className="flex items-center gap-3 mt-1">
+                          <p className="text-sm text-gray-600">
+                            {blockProgress.completedTasks} of {blockProgress.totalTasks} tasks complete
+                          </p>
+                          {(() => {
+                            const blockStatus = trafficLight(blockProgress.percentage);
+                            return (
+                              <span className={`badge text-xs ${
+                                blockStatus === 'red' ? 'bg-tl-red' :
+                                blockStatus === 'amber' ? 'bg-tl-amber' :
+                                blockStatus === 'green' ? 'bg-tl-green' : 'bg-tl-done'
+                              }`}>
+                                {trafficLabel(blockStatus)}
+                              </span>
+                            );
+                          })()}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                  {isExpanded ? <ChevronUp size={20} /> : <ChevronDown size={20} />}
+                </button>
+
+                {isExpanded && (
+                  <div className="px-6 pb-6 space-y-2">
+                    <div className="mb-4 pb-4 border-b border-gray-200">
+                      {!showAddTask ? (
+                        <button
+                          onClick={() => setShowAddTask(true)}
+                          className="w-full px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm font-medium"
+                        >
+                          Add Task
+                        </button>
+                      ) : (
+                        <div className="space-y-3 p-4 bg-white rounded-lg border border-gray-200">
+                          <input
+                            type="text"
+                            value={newTaskTitle}
+                            onChange={(e) => setNewTaskTitle(e.target.value)}
+                            placeholder="Task title..."
+                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                          />
+                          <div className="grid grid-cols-2 gap-3">
+                            <select
+                              value={newTaskAssignee}
+                              onChange={(e) => setNewTaskAssignee(e.target.value as 'client' | 'js' | 'joint')}
+                              className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                            >
+                              <option value="client">Client</option>
+                              <option value="js">JustSeventy</option>
+                              <option value="joint">Joint</option>
+                            </select>
+                            <input
+                              type="number"
+                              value={newTaskWeight}
+                              onChange={(e) => setNewTaskWeight(parseInt(e.target.value) || 1)}
+                              min="1"
+                              placeholder="Weight"
+                              className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                            />
+                          </div>
+                          <input
+                            type="date"
+                            value={newTaskDueDate}
+                            onChange={(e) => setNewTaskDueDate(e.target.value)}
+                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                          />
+                          <div className="flex gap-2">
+                            <button
+                              onClick={handleAddGeneralTask}
+                              className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium"
+                            >
+                              Save
+                            </button>
+                            <button
+                              onClick={() => {
+                                setShowAddTask(false);
+                                setNewTaskTitle('');
+                                setNewTaskDueDate('');
+                                setNewTaskWeight(1);
+                              }}
+                              className="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors"
+                            >
+                              Cancel
+                            </button>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+
+                    {block.tasks && block.tasks.filter(isTaskVisible).map((task) => (
+                      <div
+                        key={task.id}
+                        className="task-card flex items-start gap-3 p-3 bg-white rounded-lg hover:bg-gray-50 transition-colors"
                       >
                         <input
                           type="checkbox"

@@ -171,6 +171,14 @@ Deno.serve(async (req: Request) => {
       }
     }
 
+    await supabase.from('blocks').insert({
+      timeline_id: timeline.id,
+      key: 'general',
+      title: 'General Tasks',
+      order: 999,
+      is_general: true,
+    });
+
     const token = generateToken();
     const expiresAt = new Date();
     expiresAt.setDate(expiresAt.getDate() + 90);

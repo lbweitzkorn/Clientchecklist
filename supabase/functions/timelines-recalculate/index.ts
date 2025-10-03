@@ -308,13 +308,13 @@ Deno.serve(async (req: Request) => {
       );
     }
 
-    const { data: blocks, error: blocksError } = await supabase
+    const { data: allBlocks, error: blocksError } = await supabase
       .from('blocks')
       .select('*')
       .eq('timeline_id', timelineId)
       .order('order');
 
-    if (blocksError || !blocks) {
+    if (blocksError || !allBlocks) {
       return new Response(
         JSON.stringify({ error: 'Failed to load blocks' }),
         {
@@ -324,13 +324,13 @@ Deno.serve(async (req: Request) => {
       );
     }
 
-    const { data: tasks, error: tasksError } = await supabase
+    const { data: allTasks, error: tasksError } = await supabase
       .from('tasks')
       .select('*')
       .eq('timeline_id', timelineId)
       .order('order');
 
-    if (tasksError || !tasks) {
+    if (tasksError || !allTasks) {
       return new Response(
         JSON.stringify({ error: 'Failed to load tasks' }),
         {
@@ -339,6 +339,10 @@ Deno.serve(async (req: Request) => {
         }
       );
     }
+
+    const blocks = allBlocks.filter(b => !b.is_general);
+    const generalBlockIds = new Set(allBlocks.filter(b => b.is_general).map(b => b.id));
+    const tasks = allTasks.filter(t => !generalBlockIds.has(t.block_id));
 
     const blocksWithOffsets = blocks.map(block => {
       const offsets = getCanonicalOffsets(block.key);

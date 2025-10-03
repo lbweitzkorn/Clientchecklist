@@ -15,6 +15,9 @@ export function ClientView() {
   const [showBackground, setShowBackground] = useState(true);
   const [activeFilters, setActiveFilters] = useState<Set<string>>(new Set(['client', 'js', 'joint']));
   const [logoSrc, setLogoSrc] = useState(BRAND.logoDark);
+  const [showAddTask, setShowAddTask] = useState(false);
+  const [newTaskTitle, setNewTaskTitle] = useState('');
+  const [newTaskDueDate, setNewTaskDueDate] = useState('');
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
@@ -153,6 +156,45 @@ export function ClientView() {
       }
       return next;
     });
+  }
+
+  async function handleAddGeneralTask() {
+    if (!timeline || !newTaskTitle.trim()) return;
+
+    const generalBlock = timeline.blocks?.find(b => b.is_general);
+    if (!generalBlock) return;
+
+    try {
+      const maxOrder = Math.max(0, ...(generalBlock.tasks?.map(t => t.order) || [0]));
+
+      const { error } = await supabase
+        .from('tasks')
+        .insert({
+          timeline_id: timeline.id,
+          block_id: generalBlock.id,
+          title: newTaskTitle.trim(),
+          assignee: 'client',
+          weight: 1,
+          is_skeleton: false,
+          done: false,
+          due_date: newTaskDueDate || null,
+          order: maxOrder + 1,
+        });
+
+      if (error) throw error;
+
+      setNewTaskTitle('');
+      setNewTaskDueDate('');
+      setShowAddTask(false);
+
+      const token = new URLSearchParams(window.location.search).get('token');
+      if (token) {
+        await loadTimelineByToken(token);
+      }
+    } catch (error) {
+      console.error('Error adding task:', error);
+      alert('Failed to add task');
+    }
   }
 
   function getAssigneeColor(assignee: string): string {
@@ -359,7 +401,7 @@ export function ClientView() {
           </div>
 
           <div className="space-y-4 print-columns">
-            {timeline.blocks?.map((block) => {
+            {timeline.blocks?.filter(b => !b.is_general).map((block) => {
               const blockProgress = block.tasks ? calculateBlockProgress(block.tasks) : null;
               const isExpanded = expandedBlocks.has(block.id);
 
@@ -414,6 +456,128 @@ export function ClientView() {
                                 {task.is_skeleton && (
                                   <span className="px-2 py-1 text-xs font-medium rounded bg-orange-100 text-orange-700">
                                     Key Task
+                                  </span>
+                                )}
+                              </div>
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+
+            {timeline.blocks?.filter(b => b.is_general).map((block) => {
+              const blockProgress = block.tasks ? calculateBlockProgress(block.tasks) : null;
+              const isExpanded = expandedBlocks.has(block.id);
+              const canAddTasks = timeline.allow_client_task_create ?? false;
+
+              return (
+                <div key={block.id} className="block-card border border-gray-200 print-block bg-gray-50">
+                  <h2 className="block-title hidden print:block">{block.title}</h2>
+                  <button
+                    onClick={() => toggleBlock(block.id)}
+                    className="w-full flex items-center justify-between p-6 text-left hover:bg-gray-100 transition-colors print:hidden"
+                  >
+                    <div className="flex items-center gap-4 flex-1">
+                      {blockProgress && <ProgressRing percentage={blockProgress.percentage} size={70} />}
+                      <div>
+                        <h3 className="text-xl font-semibold text-gray-900">{block.title}</h3>
+                        {blockProgress && (
+                          <p className="text-sm text-gray-600 mt-1">
+                            {blockProgress.completedTasks} of {blockProgress.totalTasks} tasks complete
+                          </p>
+                        )}
+                      </div>
+                    </div>
+                    {isExpanded ? <ChevronUp size={24} /> : <ChevronDown size={24} />}
+                  </button>
+
+                  {isExpanded && (
+                    <div className="px-6 pb-6 space-y-3">
+                      {canAddTasks && (
+                        <div className="mb-4 pb-4 border-b border-gray-200">
+                          {!showAddTask ? (
+                            <button
+                              onClick={() => setShowAddTask(true)}
+                              className="w-full px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm font-medium"
+                            >
+                              Add Task
+                            </button>
+                          ) : (
+                            <div className="space-y-3 p-4 bg-white rounded-lg border border-gray-200">
+                              <input
+                                type="text"
+                                value={newTaskTitle}
+                                onChange={(e) => setNewTaskTitle(e.target.value)}
+                                placeholder="Task title..."
+                                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                              />
+                              <input
+                                type="date"
+                                value={newTaskDueDate}
+                                onChange={(e) => setNewTaskDueDate(e.target.value)}
+                                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                                placeholder="Due date (optional)"
+                              />
+                              <div className="flex gap-2">
+                                <button
+                                  onClick={handleAddGeneralTask}
+                                  className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium"
+                                >
+                                  Save
+                                </button>
+                                <button
+                                  onClick={() => {
+                                    setShowAddTask(false);
+                                    setNewTaskTitle('');
+                                    setNewTaskDueDate('');
+                                  }}
+                                  className="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors"
+                                >
+                                  Cancel
+                                </button>
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                      )}
+
+                      {block.tasks && block.tasks.filter(isTaskVisible).map((task) => {
+                        const canToggle = task.assignee === 'client' || task.assignee === 'joint';
+
+                        return (
+                          <div
+                            key={task.id}
+                            className="task-card flex items-start gap-4 p-4 rounded-lg bg-white hover:bg-gray-50 transition-colors"
+                          >
+                            <input
+                              type="checkbox"
+                              checked={task.done}
+                              onChange={() => handleTaskToggle(task)}
+                              disabled={!canToggle}
+                              className={`mt-1 w-6 h-6 rounded border-gray-300 text-blue-600 focus:ring-blue-500 print:w-4 print:h-4 ${
+                                canToggle ? 'cursor-pointer' : 'cursor-not-allowed opacity-50'
+                              }`}
+                            />
+                            <div className="flex-1">
+                              <p className={`task-title text-gray-900 font-medium ${task.done ? 'line-through opacity-60' : ''}`}>
+                                {task.title}
+                              </p>
+                              <div className="task-meta flex items-center gap-2 mt-2">
+                                <span className={`px-2 py-1 text-xs font-medium rounded ${getAssigneeColor(task.assignee)}`}>
+                                  {task.assignee}
+                                </span>
+                                {task.is_skeleton && (
+                                  <span className="px-2 py-1 text-xs font-medium rounded bg-orange-100 text-orange-700">
+                                    Key Task
+                                  </span>
+                                )}
+                                {task.due_date && (
+                                  <span className="text-xs text-gray-500">
+                                    Due: {new Date(task.due_date).toLocaleDateString()}
                                   </span>
                                 )}
                               </div>

@@ -17,8 +17,9 @@ export function calculateBlockProgress(tasks: Task[]): ProgressStats {
   };
 }
 
-export function calculateTimelineProgress(blocks: Block[]): ProgressStats {
-  const allTasks = blocks.flatMap((block) => block.tasks || []);
+export function calculateTimelineProgress(blocks: Block[], includeGeneral = true): ProgressStats {
+  const filteredBlocks = includeGeneral ? blocks : blocks.filter(b => !b.is_general);
+  const allTasks = filteredBlocks.flatMap((block) => block.tasks || []);
   return calculateBlockProgress(allTasks);
 }
 

@@ -23,6 +23,8 @@ export interface Timeline {
   updated_at: string;
   last_recalculated_at?: string;
   scale_factor?: string;
+  allow_client_task_create?: boolean;
+  include_general_in_totals?: boolean;
   event?: Event;
   blocks?: Block[];
   progress?: number;
@@ -37,6 +39,7 @@ export interface Block {
   start_date?: string;
   end_date?: string;
   created_at: string;
+  is_general?: boolean;
   tasks?: Task[];
 }
 
