@@ -1,8 +1,8 @@
 export const BRAND = {
-  logoLight: '/assets/js-logo-light.svg',
-  logoDark: '/assets/js-logo-dark.svg',
-  logoLightRetina: '/assets/js-logo-light@2x.png',
-  logoDarkRetina: '/assets/js-logo-dark@2x.png',
+  logoLight: '/assets/JS_Logo_Small_Grey_AW.jpg',
+  logoDark: '/assets/JS_Logo_Small_Grey_AW.jpg',
+  logoLightRetina: '/assets/JS_Logo_Small_Grey_AW.jpg',
+  logoDarkRetina: '/assets/JS_Logo_Small_Grey_AW.jpg',
   name: 'JustSeventy',
 };
 
