@@ -4,6 +4,7 @@ import { supabase } from '../lib/supabase';
 import { ProgressRing } from '../components/ProgressRing';
 import { calculateBlockProgress, calculateTimelineProgress, calculateProgressByAssignee } from '../utils/progress';
 import { BRAND, detectBackgroundBrightness } from '../config/brand';
+import themes, { type ThemeKey } from '../lib/themes';
 import type { Timeline, Task } from '../types';
 
 export function ClientView() {
@@ -194,19 +195,19 @@ export function ClientView() {
   const progress = timeline.blocks ? calculateTimelineProgress(timeline.blocks) : null;
   const progressByAssignee = calculateProgressByAssignee(allTasks);
 
+  const themeKey = timeline.template_key as ThemeKey;
+  const backgroundImage = themes[themeKey] || themes.wedding;
+
   return (
     <div className="min-h-screen relative">
-      {showBackground && timeline.background_url && (
+      {showBackground && (
         <>
-          <div
-            className="fixed inset-0 bg-cover bg-center bg-no-repeat"
-            style={{ backgroundImage: `url(${timeline.background_url})` }}
-          />
-          <div className="fixed inset-0 bg-white/85 backdrop-blur-sm" />
+          <div className="timeline-bg" style={{ backgroundImage: `url(${backgroundImage})` }} />
+          <div className="timeline-overlay" />
         </>
       )}
 
-      <div className="relative z-10">
+      <div className="timeline-content">
         <header className="client-header flex flex-col items-center py-6 px-4">
           <img
             id="client-logo"
@@ -235,7 +236,7 @@ export function ClientView() {
             </button>
           </div>
 
-          <div className="bg-white/95 backdrop-blur rounded-lg shadow-lg border border-gray-200 p-8 mb-6">
+          <div className="block-card p-8 mb-6 border border-gray-200">
             <div className="mb-6">
               <div className="flex items-center gap-3 mb-3">
                 <span className="px-3 py-1 bg-gray-100 text-gray-700 text-sm font-medium rounded-full">
@@ -363,7 +364,7 @@ export function ClientView() {
               const isExpanded = expandedBlocks.has(block.id);
 
               return (
-                <div key={block.id} className="bg-white/95 backdrop-blur rounded-lg shadow-lg border border-gray-200">
+                <div key={block.id} className="block-card border border-gray-200">
                   <button
                     onClick={() => toggleBlock(block.id)}
                     className="w-full flex items-center justify-between p-6 text-left hover:bg-gray-50/50 transition-colors"

@@ -2,6 +2,34 @@
 @tailwind components;
 @tailwind utilities;
 
+.timeline-bg {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+}
+
+.timeline-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 1;
+  background: radial-gradient(circle at center, transparent 0%, rgba(0, 0, 0, 0.4) 100%), rgba(0, 0, 0, 0.35);
+}
+
+.timeline-content {
+  position: relative;
+  z-index: 2;
+}
+
+.block-card {
+  backdrop-filter: blur(2px);
+  background: rgba(255, 255, 255, 0.88);
+  border-radius: 16px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+}
+
 .app-header {
   display: flex;
   align-items: center;

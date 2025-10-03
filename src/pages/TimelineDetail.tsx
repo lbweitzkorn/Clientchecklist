@@ -7,6 +7,7 @@ import { calculateBlockProgress, calculateTimelineProgress, calculateProgressByA
 import { calculateLeadTimeMonths, calculateScaleFactor } from '../utils/recalibration';
 import { getEventSourceHead, updateEventDate, recalcTimeline } from '../api/events';
 import { BRAND } from '../config/brand';
+import themes, { type ThemeKey } from '../lib/themes';
 import type { Timeline, Block, Task } from '../types';
 
 export function TimelineDetail() {
@@ -394,18 +395,19 @@ export function TimelineDetail() {
   const progress = timeline.blocks ? calculateTimelineProgress(timeline.blocks) : null;
   const progressByAssignee = calculateProgressByAssignee(allTasks);
 
+  const themeKey = timeline.template_key as ThemeKey;
+  const backgroundImage = themes[themeKey] || themes.wedding;
+
   return (
     <div className="min-h-screen relative">
-      {showBackground && timeline.background_url && (
+      {showBackground && (
         <>
-          <div
-            className="fixed inset-0 bg-cover bg-center bg-no-repeat"
-            style={{ backgroundImage: `url(${timeline.background_url})` }}
-          />
-          <div className="fixed inset-0 bg-white/90 backdrop-blur-sm" />
+          <div className="timeline-bg" style={{ backgroundImage: `url(${backgroundImage})` }} />
+          <div className="timeline-overlay" />
         </>
       )}
 
+      <div className="timeline-content">
       <header className="app-header relative z-10 bg-white/95 backdrop-blur-sm border-b border-gray-200 print:hidden sticky top-0">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-14">
@@ -463,7 +465,7 @@ export function TimelineDetail() {
           </div>
         </div>
 
-        <div className="bg-white/95 backdrop-blur rounded-lg shadow-lg border border-gray-200 p-6 mb-6">
+        <div className="block-card p-6 mb-6 border border-gray-200">
           {showAcceptJsChange && (
             <div className="flex items-center gap-2 bg-yellow-50 border border-yellow-200 rounded-lg p-3 mb-4">
               <AlertCircle className="h-5 w-5 text-yellow-600 flex-shrink-0" />
@@ -723,7 +725,7 @@ export function TimelineDetail() {
             const isExpanded = expandedBlocks.has(block.id);
 
             return (
-              <div key={block.id} className="bg-white/95 backdrop-blur rounded-lg shadow-lg border border-gray-200">
+              <div key={block.id} className="block-card border border-gray-200">
                 <button
                   onClick={() => toggleBlock(block.id)}
                   className="w-full flex items-center justify-between p-6 text-left hover:bg-gray-50 transition-colors"
@@ -803,6 +805,7 @@ export function TimelineDetail() {
             );
           })}
         </div>
+      </div>
       </div>
 
       {showUpdateConfirm && (
