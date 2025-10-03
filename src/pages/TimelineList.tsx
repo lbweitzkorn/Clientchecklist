@@ -3,6 +3,7 @@ import { Calendar, MapPin, ExternalLink, Upload } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import { BRAND } from '../config/brand';
 import { calculateCountdown } from '../utils/countdown';
+import { trafficLight, trafficLabel } from '../utils/trafficLight';
 import type { Timeline } from '../types';
 
 export function TimelineList() {
@@ -286,10 +287,23 @@ export function TimelineList() {
                   </div>
                   <div className="flex items-center gap-4">
                     <div className="text-center">
-                      <div className="text-3xl font-bold text-blue-600">
-                        {timeline.progress}%
-                      </div>
-                      <div className="text-xs text-gray-500">Complete</div>
+                      {(() => {
+                        const status = trafficLight(timeline.progress || 0);
+                        const colorClass =
+                          status === 'red' ? 'tl-red' :
+                          status === 'amber' ? 'tl-amber' :
+                          status === 'green' ? 'tl-green' : 'tl-done';
+                        return (
+                          <>
+                            <div className={`text-3xl font-bold ${colorClass}`}>
+                              {timeline.progress}%
+                            </div>
+                            <div className={`text-xs font-semibold mt-1 ${colorClass}`}>
+                              {trafficLabel(status)}
+                            </div>
+                          </>
+                        );
+                      })()}
                     </div>
                     <a
                       href={`/timeline/${timeline.id}`}
