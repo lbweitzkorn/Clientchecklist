@@ -21,6 +21,8 @@ export interface Timeline {
   background_url?: string;
   created_at: string;
   updated_at: string;
+  last_recalculated_at?: string;
+  scale_factor?: string;
   event?: Event;
   blocks?: Block[];
   progress?: number;
@@ -32,6 +34,8 @@ export interface Block {
   key: string;
   title: string;
   order: number;
+  start_date?: string;
+  end_date?: string;
   created_at: string;
   tasks?: Task[];
 }
@@ -49,6 +53,8 @@ export interface Task {
   done: boolean;
   done_by?: string;
   done_at?: string;
+  locked?: boolean;
+  depends_on_task_ids?: string[];
   order: number;
   created_at: string;
   updated_at: string;

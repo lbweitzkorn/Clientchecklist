@@ -37,6 +37,7 @@ Deno.serve(async (req: Request) => {
 
     let eventId: string;
     let actualTemplateKey: string;
+    let eventData: EventData | null = null;
 
     if (eventCode && templateKey) {
       const { data: existingEvent, error: eventError } = await supabase
@@ -56,6 +57,7 @@ Deno.serve(async (req: Request) => {
 
       eventId = existingEvent.id;
       actualTemplateKey = templateKey;
+      eventData = existingEvent;
     } else if (event) {
       if (!event.code || !event.title || !event.type) {
         return new Response(
@@ -85,6 +87,7 @@ Deno.serve(async (req: Request) => {
 
         if (updateError) throw updateError;
         eventId = updatedEvent.id;
+        eventData = updatedEvent;
       } else {
         const { data: newEvent, error: insertError } = await supabase
           .from('events')
@@ -101,9 +104,11 @@ Deno.serve(async (req: Request) => {
 
         if (insertError) throw insertError;
         eventId = newEvent.id;
+        eventData = newEvent;
       }
 
       actualTemplateKey = event.type;
+      if (!eventData) eventData = event;
     } else {
       return new Response(
         JSON.stringify({ error: 'Missing required parameters: eventCode and templateKey, or event object' }),
@@ -181,6 +186,25 @@ Deno.serve(async (req: Request) => {
       .single();
 
     if (shareLinkError) throw shareLinkError;
+
+    if (eventData?.date) {
+      try {
+        const recalcUrl = `${Deno.env.get('SUPABASE_URL')}/functions/v1/timelines-recalculate/${timeline.id}`;
+        await fetch(recalcUrl, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${Deno.env.get('SUPABASE_ANON_KEY')}`,
+          },
+          body: JSON.stringify({
+            respectLocks: false,
+            distribution: 'frontload',
+          }),
+        });
+      } catch (recalcError) {
+        console.error('Auto-recalculation failed:', recalcError);
+      }
+    }
 
     const baseUrl = Deno.env.get('SUPABASE_URL')?.replace(/\/$/g, '') || '';
     const shareUrl = `${baseUrl.replace('https://', 'https://').replace('.supabase.co', '')}/timeline?token=${token}`;

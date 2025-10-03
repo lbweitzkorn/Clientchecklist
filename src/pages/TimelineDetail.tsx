@@ -1,9 +1,10 @@
 import { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
-import { ArrowLeft, Link2, Calendar, MapPin, ChevronDown, ChevronUp, Eye, EyeOff, Printer, Filter } from 'lucide-react';
+import { ArrowLeft, Link2, Calendar, MapPin, ChevronDown, ChevronUp, Eye, EyeOff, Printer, Filter, RefreshCw, Lock, Unlock } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import { ProgressRing } from '../components/ProgressRing';
 import { calculateBlockProgress, calculateTimelineProgress, calculateProgressByAssignee } from '../utils/progress';
+import { calculateLeadTimeMonths, calculateScaleFactor } from '../utils/recalibration';
 import type { Timeline, Block, Task } from '../types';
 
 export function TimelineDetail() {
@@ -14,6 +15,9 @@ export function TimelineDetail() {
   const [shareLink, setShareLink] = useState<string>('');
   const [showBackground, setShowBackground] = useState(true);
   const [activeFilters, setActiveFilters] = useState<Set<string>>(new Set(['client', 'js', 'both']));
+  const [recalculating, setRecalculating] = useState(false);
+  const [respectLocks, setRespectLocks] = useState(true);
+  const [distribution, setDistribution] = useState<'balanced' | 'frontload' | 'even'>('frontload');
 
   useEffect(() => {
     if (id) {
@@ -201,6 +205,59 @@ export function TimelineDetail() {
 
   function isTaskVisible(task: Task): boolean {
     return activeFilters.has(task.assignee);
+  }
+
+  async function handleRecalculate() {
+    if (!timeline || !id) return;
+
+    setRecalculating(true);
+    try {
+      const apiUrl = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/timelines-recalculate/${id}`;
+      const response = await fetch(apiUrl, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_ANON_KEY}`,
+        },
+        body: JSON.stringify({
+          respectLocks,
+          distribution,
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Recalculation failed');
+      }
+
+      const result = await response.json();
+
+      alert(`Timeline recalibrated successfully!\nLead time: ${result.lead_time_months} months\nScale factor: ${result.scale_factor.toFixed(2)}`);
+
+      await loadTimeline(id);
+    } catch (error) {
+      console.error('Error recalculating timeline:', error);
+      alert('Failed to recalculate timeline. Please try again.');
+    } finally {
+      setRecalculating(false);
+    }
+  }
+
+  async function handleTaskLockToggle(task: Task) {
+    if (!timeline) return;
+
+    try {
+      const { error } = await supabase
+        .from('tasks')
+        .update({ locked: !task.locked })
+        .eq('id', task.id);
+
+      if (error) throw error;
+
+      await loadTimeline(id!);
+    } catch (error) {
+      console.error('Error toggling task lock:', error);
+      alert('Failed to toggle task lock');
+    }
   }
 
   if (loading) {
@@ -416,6 +473,70 @@ export function TimelineDetail() {
               </div>
             )}
           </div>
+
+          <div className="mt-6 border-t border-gray-200 pt-6">
+            <h3 className="text-lg font-semibold text-gray-900 mb-4">Timeline Recalibration</h3>
+
+            {timeline.event?.date && (
+              <div className="mb-4 p-3 bg-gray-50 rounded-lg">
+                <div className="flex items-center justify-between">
+                  <div className="text-sm text-gray-700">
+                    <span className="font-medium">Lead Time:</span>{' '}
+                    {calculateLeadTimeMonths(new Date(timeline.event.date))} months
+                  </div>
+                  {timeline.scale_factor && (
+                    <div className="text-sm text-gray-700">
+                      <span className="font-medium">Scale Factor:</span>{' '}
+                      {parseFloat(timeline.scale_factor).toFixed(2)}
+                    </div>
+                  )}
+                  {timeline.last_recalculated_at && (
+                    <div className="text-xs text-gray-500">
+                      Last recalculated:{' '}
+                      {new Date(timeline.last_recalculated_at).toLocaleDateString()}
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+
+            <div className="flex flex-col gap-4">
+              <div className="flex items-center gap-4">
+                <label className="flex items-center gap-2">
+                  <input
+                    type="checkbox"
+                    checked={respectLocks}
+                    onChange={(e) => setRespectLocks(e.target.checked)}
+                    className="w-4 h-4 text-blue-600 rounded"
+                  />
+                  <span className="text-sm text-gray-700">Respect locks and completed tasks</span>
+                </label>
+
+                <select
+                  value={distribution}
+                  onChange={(e) => setDistribution(e.target.value as 'balanced' | 'frontload' | 'even')}
+                  className="px-3 py-1 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                >
+                  <option value="frontload">Front-load skeleton</option>
+                  <option value="balanced">Balanced</option>
+                  <option value="even">Even by count</option>
+                </select>
+              </div>
+
+              <button
+                onClick={handleRecalculate}
+                disabled={recalculating}
+                className="flex items-center justify-center gap-2 px-6 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed w-full md:w-auto"
+              >
+                <RefreshCw size={18} className={recalculating ? 'animate-spin' : ''} />
+                {recalculating ? 'Recalculating...' : 'Recalculate Schedule'}
+              </button>
+
+              <p className="text-xs text-gray-500">
+                Recalculates all task due dates based on the event date and lead time. Skeleton tasks are prioritized, and dates are distributed proportionally across blocks.
+              </p>
+            </div>
+          </div>
         </div>
 
         <div className="space-y-4">
@@ -478,6 +599,22 @@ export function TimelineDetail() {
                               </span>
                             )}
                             <span className="text-xs text-gray-500">Weight: {task.weight}</span>
+                            {task.due_date && (
+                              <span className="text-xs text-gray-500">
+                                Due: {new Date(task.due_date).toLocaleDateString()}
+                              </span>
+                            )}
+                            <button
+                              onClick={() => handleTaskLockToggle(task)}
+                              className={`ml-auto p-1 rounded transition-colors ${
+                                task.locked
+                                  ? 'text-orange-600 hover:bg-orange-100'
+                                  : 'text-gray-400 hover:bg-gray-100'
+                              }`}
+                              title={task.locked ? 'Task locked (won\'t be recalculated)' : 'Click to lock task'}
+                            >
+                              {task.locked ? <Lock size={14} /> : <Unlock size={14} />}
+                            </button>
                           </div>
                         </div>
                       </div>
