@@ -597,7 +597,7 @@ export function TimelineDetail() {
             <div className="bg-blue-50 rounded-lg p-4 flex flex-col items-center kpi">
               <ProgressRing percentage={progressByAssignee.client.percentage} size={70} strokeWidth={7} color="#3b82f6" />
               <div className="text-sm text-blue-700 text-center font-medium mt-2">
-                Client Tasks
+                Client Involved
               </div>
               <div className="text-xs text-blue-600 mt-1">
                 {progressByAssignee.client.completedTasks} / {progressByAssignee.client.totalTasks} tasks
@@ -607,7 +607,7 @@ export function TimelineDetail() {
             <div className="bg-purple-50 rounded-lg p-4 flex flex-col items-center kpi">
               <ProgressRing percentage={progressByAssignee.js.percentage} size={70} strokeWidth={7} color="#a855f7" />
               <div className="text-sm text-purple-700 text-center font-medium mt-2">
-                JustSeventy Tasks
+                JustSeventy Involved
               </div>
               <div className="text-xs text-purple-600 mt-1">
                 {progressByAssignee.js.completedTasks} / {progressByAssignee.js.totalTasks} tasks
