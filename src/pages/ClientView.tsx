@@ -13,7 +13,7 @@ export function ClientView() {
   const [error, setError] = useState<string>('');
   const [expandedBlocks, setExpandedBlocks] = useState<Set<string>>(new Set());
   const [showBackground, setShowBackground] = useState(true);
-  const [activeFilters, setActiveFilters] = useState<Set<string>>(new Set(['client', 'js', 'both']));
+  const [activeFilters, setActiveFilters] = useState<Set<string>>(new Set(['client', 'js', 'joint']));
   const [logoSrc, setLogoSrc] = useState(BRAND.logoDark);
 
   useEffect(() => {
@@ -161,7 +161,7 @@ export function ClientView() {
         return 'bg-blue-100 text-blue-700';
       case 'js':
         return 'bg-purple-100 text-purple-700';
-      case 'both':
+      case 'joint':
         return 'bg-green-100 text-green-700';
       default:
         return 'bg-gray-100 text-gray-700';
@@ -303,12 +303,12 @@ export function ClientView() {
               </div>
 
               <div className="bg-green-50 rounded-lg p-4 flex flex-col items-center kpi">
-                <ProgressRing percentage={progressByAssignee.both.percentage} size={80} strokeWidth={8} color="#10b981" />
+                <ProgressRing percentage={progressByAssignee.joint.percentage} size={80} strokeWidth={8} color="#10b981" />
                 <div className="text-sm text-green-700 text-center font-medium mt-2">
                   Joint Tasks
                 </div>
                 <div className="text-xs text-green-600 mt-1">
-                  {progressByAssignee.both.completedTasks} / {progressByAssignee.both.totalTasks} tasks
+                  {progressByAssignee.joint.completedTasks} / {progressByAssignee.joint.totalTasks} tasks
                 </div>
               </div>
             </div>
@@ -338,9 +338,9 @@ export function ClientView() {
                   JustSeventy
                 </button>
                 <button
-                  onClick={() => toggleFilter('both')}
+                  onClick={() => toggleFilter('joint')}
                   className={`px-3 py-1 text-sm font-medium rounded-lg transition-colors ${
-                    activeFilters.has('both')
+                    activeFilters.has('joint')
                       ? 'bg-green-100 text-green-700 border-2 border-green-300'
                       : 'bg-gray-100 text-gray-400 border-2 border-transparent'
                   }`}
@@ -387,7 +387,7 @@ export function ClientView() {
                   {isExpanded && block.tasks && (
                     <div className="px-6 pb-6 space-y-3">
                       {block.tasks.filter(isTaskVisible).map((task) => {
-                        const canToggle = task.assignee === 'client' || task.assignee === 'both';
+                        const canToggle = task.assignee === 'client' || task.assignee === 'joint';
 
                         return (
                           <div

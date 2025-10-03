@@ -1,5 +1,5 @@
 export type EventType = 'wedding' | 'bar_mitzvah' | 'bat_mitzvah' | 'party';
-export type Assignee = 'client' | 'js' | 'both';
+export type Assignee = 'client' | 'js' | 'joint';
 export type AuditAction = 'check' | 'uncheck' | 'edit' | 'create';
 
 export interface Event {

@@ -32,15 +32,15 @@ export function getProgressColor(percentage: number): string {
 export function calculateProgressByAssignee(tasks: Task[]): {
   client: ProgressStats;
   js: ProgressStats;
-  both: ProgressStats;
+  joint: ProgressStats;
 } {
-  const clientTasks = tasks.filter(t => t.assignee === 'client' || t.assignee === 'both');
-  const jsTasks = tasks.filter(t => t.assignee === 'js' || t.assignee === 'both');
-  const bothTasks = tasks.filter(t => t.assignee === 'both');
+  const clientTasks = tasks.filter(t => t.assignee === 'client' || t.assignee === 'joint');
+  const jsTasks = tasks.filter(t => t.assignee === 'js' || t.assignee === 'joint');
+  const jointTasks = tasks.filter(t => t.assignee === 'joint');
 
   return {
     client: calculateBlockProgress(clientTasks),
     js: calculateBlockProgress(jsTasks),
-    both: calculateBlockProgress(bothTasks),
+    joint: calculateBlockProgress(jointTasks),
   };
 }

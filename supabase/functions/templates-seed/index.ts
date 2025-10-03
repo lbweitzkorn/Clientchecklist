@@ -8,7 +8,7 @@ const corsHeaders = {
 
 interface TemplateTask {
   title: string;
-  assignee: 'client' | 'js' | 'both';
+  assignee: 'client' | 'js' | 'joint';
   isSkeleton?: boolean;
   weight?: number;
   order: number;
