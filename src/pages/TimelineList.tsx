@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Calendar, MapPin, ExternalLink, Upload } from 'lucide-react';
 import { supabase } from '../lib/supabase';
+import { BRAND } from '../config/brand';
 import type { Timeline } from '../types';
 
 export function TimelineList() {
@@ -161,6 +162,22 @@ export function TimelineList() {
 
   return (
     <div className="min-h-screen bg-gray-50">
+      <header className="app-header bg-white border-b border-gray-200 sticky top-0 z-50">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex items-center h-14">
+            <a href="/" className="brand flex items-center">
+              <img
+                id="brand-logo"
+                src={BRAND.logoLight}
+                alt={BRAND.name}
+                className="h-7 w-auto"
+                style={{ imageRendering: '-webkit-optimize-contrast' }}
+              />
+            </a>
+          </div>
+        </div>
+      </header>
+
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="flex justify-between items-center mb-8">
           <div>

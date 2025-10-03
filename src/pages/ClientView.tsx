@@ -3,6 +3,7 @@ import { Calendar, MapPin, ChevronDown, ChevronUp, Eye, EyeOff, Printer, Filter 
 import { supabase } from '../lib/supabase';
 import { ProgressRing } from '../components/ProgressRing';
 import { calculateBlockProgress, calculateTimelineProgress, calculateProgressByAssignee } from '../utils/progress';
+import { BRAND, detectBackgroundBrightness } from '../config/brand';
 import type { Timeline, Task } from '../types';
 
 export function ClientView() {
@@ -12,6 +13,7 @@ export function ClientView() {
   const [expandedBlocks, setExpandedBlocks] = useState<Set<string>>(new Set());
   const [showBackground, setShowBackground] = useState(true);
   const [activeFilters, setActiveFilters] = useState<Set<string>>(new Set(['client', 'js', 'both']));
+  const [logoSrc, setLogoSrc] = useState(BRAND.logoDark);
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
@@ -74,6 +76,12 @@ export function ClientView() {
 
       setTimeline(data);
       setExpandedBlocks(new Set(data.blocks?.map((b) => b.id) || []));
+
+      if (data.background_url) {
+        detectBackgroundBrightness(data.background_url).then((isBright) => {
+          setLogoSrc(isBright ? BRAND.logoDark : BRAND.logoLight);
+        });
+      }
     } catch (error) {
       console.error('Error loading timeline:', error);
       setError('Failed to load timeline');
@@ -199,7 +207,17 @@ export function ClientView() {
       )}
 
       <div className="relative z-10">
-        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <header className="client-header flex flex-col items-center py-6 px-4">
+          <img
+            id="client-logo"
+            src={logoSrc}
+            alt={BRAND.name}
+            className="h-8 w-auto mb-3"
+            style={{ imageRendering: '-webkit-optimize-contrast' }}
+          />
+        </header>
+
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
           <div className="flex justify-end gap-3 mb-4 print:hidden">
             <button
               onClick={() => window.print()}

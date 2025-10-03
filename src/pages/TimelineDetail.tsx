@@ -5,6 +5,7 @@ import { supabase } from '../lib/supabase';
 import { ProgressRing } from '../components/ProgressRing';
 import { calculateBlockProgress, calculateTimelineProgress, calculateProgressByAssignee } from '../utils/progress';
 import { calculateLeadTimeMonths, calculateScaleFactor } from '../utils/recalibration';
+import { BRAND } from '../config/brand';
 import type { Timeline, Block, Task } from '../types';
 
 export function TimelineDetail() {
@@ -207,6 +208,14 @@ export function TimelineDetail() {
     return activeFilters.has(task.assignee);
   }
 
+  function formatDate(dateString: string): string {
+    return new Date(dateString).toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric',
+    });
+  }
+
   async function handleRecalculate() {
     if (!timeline || !id) return;
 
@@ -292,17 +301,44 @@ export function TimelineDetail() {
         </>
       )}
 
+      <header className="app-header relative z-10 bg-white/95 backdrop-blur-sm border-b border-gray-200 print:hidden sticky top-0">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex items-center justify-between h-14">
+            <a href="/" className="brand flex items-center gap-3">
+              <img
+                id="brand-logo"
+                src={BRAND.logoLight}
+                alt={BRAND.name}
+                className="h-7 w-auto"
+                style={{ imageRendering: '-webkit-optimize-contrast' }}
+              />
+            </a>
+            <a
+              href="/"
+              className="inline-flex items-center gap-2 text-gray-600 hover:text-gray-900 transition-colors text-sm"
+            >
+              <ArrowLeft size={18} />
+              Back to Timelines
+            </a>
+          </div>
+        </div>
+      </header>
+
+      <div className="print-header hidden print:flex items-center gap-3 border-b border-gray-300 pb-2 mb-4">
+        <img src={BRAND.logoLight} alt={BRAND.name} className="h-6 w-auto" />
+        <div className="flex-1">
+          <div className="text-sm font-medium text-gray-900">
+            {timeline.event?.code} — {timeline.event?.title}
+          </div>
+          <div className="text-xs text-gray-600">
+            {timeline.event?.date && formatDate(timeline.event.date)} • Overall progress: {progress?.percentage || 0}%
+          </div>
+        </div>
+      </div>
+
       <div className="relative z-10">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className="mb-6 flex items-center justify-between">
-          <a
-            href="/"
-            className="inline-flex items-center gap-2 text-gray-600 hover:text-gray-900 transition-colors print:hidden"
-          >
-            <ArrowLeft size={20} />
-            Back to Timelines
-          </a>
-          <div className="flex items-center gap-3 print:hidden">
+        <div className="mb-6 flex items-center justify-end print:hidden">
             <button
               onClick={() => window.print()}
               className="flex items-center gap-2 px-4 py-2 bg-white/90 backdrop-blur text-gray-700 rounded-lg hover:bg-white transition-colors shadow-sm border border-gray-200"
@@ -624,7 +660,6 @@ export function TimelineDetail() {
               </div>
             );
           })}
-        </div>
         </div>
       </div>
     </div>
