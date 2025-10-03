@@ -1,10 +1,11 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { useParams } from 'react-router-dom';
-import { ArrowLeft, Link2, Calendar, MapPin, ChevronDown, ChevronUp, Eye, EyeOff, Printer, Filter, RefreshCw, Lock, Unlock } from 'lucide-react';
+import { ArrowLeft, Link2, Calendar, MapPin, ChevronDown, ChevronUp, Eye, EyeOff, Printer, Filter, RefreshCw, Lock, Unlock, AlertCircle } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import { ProgressRing } from '../components/ProgressRing';
 import { calculateBlockProgress, calculateTimelineProgress, calculateProgressByAssignee } from '../utils/progress';
 import { calculateLeadTimeMonths, calculateScaleFactor } from '../utils/recalibration';
+import { getEventSourceHead, updateEventDate, recalcTimeline } from '../api/events';
 import { BRAND } from '../config/brand';
 import type { Timeline, Block, Task } from '../types';
 
@@ -20,12 +21,49 @@ export function TimelineDetail() {
   const [respectLocks, setRespectLocks] = useState(true);
   const [distribution, setDistribution] = useState<'balanced' | 'frontload' | 'even'>('frontload');
 
+  const [localDate, setLocalDate] = useState<string>('');
+  const [initialDate, setInitialDate] = useState<string>('');
+  const [sourceHead, setSourceHead] = useState<{date:string;sourceVersion:number}|null>(null);
+  const [showUpdateConfirm, setShowUpdateConfirm] = useState(false);
+  const [showAcceptJsChange, setShowAcceptJsChange] = useState(false);
+  const [pendingNewDate, setPendingNewDate] = useState<string|undefined>(undefined);
+  const pollRef = useRef<number | null>(null);
+
+  const isDirty = localDate && initialDate && localDate !== initialDate;
+
   useEffect(() => {
     if (id) {
       loadTimeline(id);
       loadShareLink(id);
     }
   }, [id]);
+
+  useEffect(() => {
+    const d = timeline?.event?.date ? timeline.event.date.substring(0,10) : '';
+    setLocalDate(d);
+    setInitialDate(d);
+  }, [timeline?.event?.date]);
+
+  useEffect(() => {
+    if (!timeline?.event?.id) return;
+
+    async function poll() {
+      try {
+        const head = await getEventSourceHead(String(timeline.event.id));
+        setSourceHead(head);
+        const jsDate = head.date?.substring(0,10);
+        const uiBaseline = initialDate;
+        if (jsDate && uiBaseline && jsDate !== uiBaseline) {
+          setShowAcceptJsChange(true);
+        }
+      } catch (e) {
+        console.error('Poll error:', e);
+      }
+    }
+    poll();
+    pollRef.current = window.setInterval(poll, 60000);
+    return () => { if (pollRef.current) window.clearInterval(pollRef.current); };
+  }, [timeline?.event?.id, initialDate]);
 
   async function loadTimeline(timelineId: string) {
     try {
@@ -269,6 +307,73 @@ export function TimelineDetail() {
     }
   }
 
+  function handleLocalDateChange(e: React.ChangeEvent<HTMLInputElement>) {
+    setLocalDate(e.target.value);
+  }
+
+  function requestUpdateJsLive() {
+    if (!localDate) return;
+    setPendingNewDate(localDate);
+    setShowUpdateConfirm(true);
+  }
+
+  async function confirmUpdateJsLive(force = false) {
+    if (!pendingNewDate || !timeline?.event?.id) return;
+    setShowUpdateConfirm(false);
+    try {
+      const mutationId = crypto?.randomUUID?.() || String(Date.now());
+      const res = await updateEventDate(String(timeline.event.id), pendingNewDate, mutationId, force);
+      alert('Date updated in JS Live');
+      setInitialDate(pendingNewDate);
+      setLocalDate(pendingNewDate);
+      const doRecalc = window.confirm('Recalculate the timeline to fit the new date?');
+      if (doRecalc) {
+        await recalcTimeline(String(timeline.id), { respectLocks: true, distribution: 'frontload' });
+        alert('Timeline recalculated');
+        await loadTimeline(timeline.id);
+      }
+    } catch (err:any) {
+      const msg = String(err?.message || err);
+      if (msg.includes('conflict') || msg.includes('sourceVersion')) {
+        const overwrite = window.confirm(
+          `JS Live changed the date while you were editing.\n` +
+          `JS Live: ${sourceHead?.date?.substring(0,10)}\n` +
+          `Yours: ${pendingNewDate}\n\n` +
+          `Overwrite JS Live with your date?`
+        );
+        if (overwrite) return confirmUpdateJsLive(true);
+        if (sourceHead?.date) {
+          const js = sourceHead.date.substring(0,10);
+          setLocalDate(js);
+          setInitialDate(js);
+          alert('Kept JS Live date');
+        }
+      } else {
+        alert(msg);
+      }
+    } finally {
+      setPendingNewDate(undefined);
+    }
+  }
+
+  function dismissJsChangeBanner() {
+    setShowAcceptJsChange(false);
+  }
+
+  async function acceptJsChange() {
+    if (!sourceHead?.date) return;
+    const js = sourceHead.date.substring(0,10);
+    setLocalDate(js);
+    setInitialDate(js);
+    setShowAcceptJsChange(false);
+    const doRecalc = window.confirm('JS Live date accepted. Recalculate the timeline now?');
+    if (doRecalc) {
+      await recalcTimeline(String(timeline!.id), { respectLocks: true, distribution: 'frontload' });
+      alert('Timeline recalculated');
+      await loadTimeline(timeline!.id);
+    }
+  }
+
   if (loading) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
@@ -359,6 +464,27 @@ export function TimelineDetail() {
         </div>
 
         <div className="bg-white/95 backdrop-blur rounded-lg shadow-lg border border-gray-200 p-6 mb-6">
+          {showAcceptJsChange && (
+            <div className="flex items-center gap-2 bg-yellow-50 border border-yellow-200 rounded-lg p-3 mb-4">
+              <AlertCircle className="h-5 w-5 text-yellow-600 flex-shrink-0" />
+              <div className="flex-1 text-sm text-yellow-800">
+                JS Live changed the event date to <b>{sourceHead?.date?.substring(0,10)}</b>. Accept?
+              </div>
+              <button
+                onClick={acceptJsChange}
+                className="px-3 py-1 bg-yellow-600 text-white text-sm rounded hover:bg-yellow-700 transition-colors"
+              >
+                Accept
+              </button>
+              <button
+                onClick={dismissJsChangeBanner}
+                className="px-3 py-1 text-yellow-700 text-sm hover:bg-yellow-100 rounded transition-colors"
+              >
+                Dismiss
+              </button>
+            </div>
+          )}
+
           <div className="mb-4">
             <div className="flex items-center gap-3 mb-2">
               <span className="px-3 py-1 bg-gray-100 text-gray-700 text-sm font-medium rounded-full">
@@ -371,21 +497,37 @@ export function TimelineDetail() {
             <h1 className="text-3xl font-bold text-gray-900 mb-3">
               {timeline.event?.title}
             </h1>
-            <div className="flex items-center gap-4 text-gray-600">
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
               {timeline.event?.date && (
-                <div className="flex items-center gap-1">
-                  <Calendar size={18} />
-                  {new Date(timeline.event.date).toLocaleDateString('en-US', {
-                    year: 'numeric',
-                    month: 'long',
-                    day: 'numeric',
-                  })}
+                <div className="flex flex-col gap-2">
+                  <label className="text-sm font-medium text-gray-700">Event date</label>
+                  <div className="flex items-center gap-2">
+                    <input
+                      type="date"
+                      value={localDate || ''}
+                      onChange={handleLocalDateChange}
+                      className="px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    />
+                    <button
+                      disabled={!isDirty}
+                      onClick={requestUpdateJsLive}
+                      title="Update JS Live with this date"
+                      className="px-4 py-2 bg-blue-600 text-white text-sm rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      Save
+                    </button>
+                  </div>
+                  <small className="text-xs text-gray-500">Changes here sync to JS Live for {timeline.event?.code}</small>
                 </div>
               )}
               {timeline.event?.venue && (
-                <div className="flex items-center gap-1">
-                  <MapPin size={18} />
-                  {timeline.event.venue}
+                <div className="flex flex-col gap-2">
+                  <label className="text-sm font-medium text-gray-700">Venue</label>
+                  <div className="flex items-center gap-2 text-gray-600">
+                    <MapPin size={18} />
+                    {timeline.event.venue}
+                  </div>
                 </div>
               )}
             </div>
@@ -662,6 +804,34 @@ export function TimelineDetail() {
           })}
         </div>
       </div>
+
+      {showUpdateConfirm && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg shadow-xl max-w-md w-full mx-4">
+            <div className="p-6">
+              <h3 className="text-xl font-semibold text-gray-900 mb-4">Update event date</h3>
+              <p className="text-gray-600 mb-4">
+                You changed the event date to <b>{pendingNewDate}</b>.<br/>
+                This will update JS Live for job <b>{timeline?.event?.code}</b>. Continue?
+              </p>
+              <div className="flex justify-end gap-3 mt-6">
+                <button
+                  onClick={() => setShowUpdateConfirm(false)}
+                  className="px-4 py-2 text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={() => confirmUpdateJsLive(false)}
+                  className="px-4 py-2 text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition-colors"
+                >
+                  Update JS Live
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
