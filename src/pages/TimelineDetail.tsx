@@ -712,9 +712,17 @@ export function TimelineDetail() {
                 {recalculating ? 'Recalculating...' : 'Recalculate Schedule'}
               </button>
 
-              <p className="text-xs text-gray-500">
-                Recalculates all task due dates based on the event date and lead time. Skeleton tasks are prioritized, and dates are distributed proportionally across blocks.
-              </p>
+              <div className="text-xs text-gray-600 space-y-2 bg-gray-50 p-3 rounded-lg">
+                <p className="font-medium text-gray-700">Distribution Strategies:</p>
+                <ul className="space-y-1 ml-2">
+                  <li><span className="font-semibold">Front-load:</span> Places first 50% of tasks in the first 25% of available time, keeping critical work early.</li>
+                  <li><span className="font-semibold">Balanced:</span> Distributes tasks evenly throughout the block with consistent spacing.</li>
+                  <li><span className="font-semibold">Even by count:</span> Spreads tasks uniformly based on mathematical distribution (i/(N-1)).</li>
+                </ul>
+                <p className="mt-2 pt-2 border-t border-gray-200">
+                  <span className="font-semibold">Respect Locks:</span> When checked, locked tasks stay fixed and act as anchors, splitting blocks into segments. Unlocked tasks distribute around them. When unchecked, all tasks (including locked ones) are repositioned.
+                </p>
+              </div>
             </div>
           </div>
         </div>
