@@ -1,0 +1,465 @@
+[
+  {
+    "templateKey": "wedding",
+    "title": "Wedding 12-Month Timeline",
+    "description": "Comprehensive wedding planning timeline from 12 months to 2 weeks before",
+    "backgroundUrl": "https://images.pexels.com/photos/265722/pexels-photo-265722.jpeg",
+    "blocks": [
+      {
+        "key": "12m",
+        "title": "12 months before",
+        "order": 1,
+        "tasks": [
+          { "title": "Envision your wedding: style, venue, traditions", "assignee": "client", "isSkeleton": true, "weight": 3, "order": 1 },
+          { "title": "Hire an event planner", "assignee": "client", "isSkeleton": true, "weight": 3, "order": 2 },
+          { "title": "Set a wedding date", "assignee": "client", "isSkeleton": true, "weight": 3, "order": 3 },
+          { "title": "Work out global budget including VAT", "assignee": "client", "weight": 1, "order": 4 },
+          { "title": "Decide guest numbers", "assignee": "client", "weight": 1, "order": 5 },
+          { "title": "Look at venues", "assignee": "client", "weight": 1, "order": 6 },
+          { "title": "First meeting with JustSeventy", "assignee": "both", "weight": 1, "order": 7 },
+          { "title": "Compile guest list and addresses", "assignee": "client", "weight": 1, "order": 8 },
+          { "title": "Decide and book your venue", "assignee": "client", "isSkeleton": true, "weight": 3, "order": 9 },
+          { "title": "Send save-the-dates (prioritise travel guests)", "assignee": "client", "isSkeleton": true, "weight": 3, "order": 10 },
+          { "title": "Start dress research", "assignee": "client", "weight": 1, "order": 11 },
+          { "title": "Create time plan (start and finish times)", "assignee": "js", "weight": 1, "order": 12 }
+        ]
+      },
+      {
+        "key": "10m",
+        "title": "10 months before",
+        "order": 2,
+        "tasks": [
+          { "title": "Choose wedding party", "assignee": "client", "weight": 1, "order": 1 },
+          { "title": "Register for gifts", "assignee": "client", "weight": 1, "order": 2 },
+          { "title": "Decide on wedding attire theme", "assignee": "client", "weight": 1, "order": 3 },
+          { "title": "Book photographer and videographer", "assignee": "client", "isSkeleton": true, "weight": 3, "order": 4 },
+          { "title": "Research and book band/DJ", "assignee": "client", "weight": 1, "order": 5 },
+          { "title": "Order wedding dress", "assignee": "client", "weight": 1, "order": 6 }
+        ]
+      },
+      {
+        "key": "8m",
+        "title": "8 months before",
+        "order": 3,
+        "tasks": [
+          { "title": "Book florist", "assignee": "client", "weight": 1, "order": 1 },
+          { "title": "Book ceremony musicians", "assignee": "client", "weight": 1, "order": 2 },
+          { "title": "Finalize menu and cake design", "assignee": "client", "weight": 1, "order": 3 },
+          { "title": "Book hair and makeup artists", "assignee": "client", "weight": 1, "order": 4 },
+          { "title": "Arrange accommodation for guests", "assignee": "client", "weight": 1, "order": 5 },
+          { "title": "Create wedding website", "assignee": "client", "weight": 1, "order": 6 }
+        ]
+      },
+      {
+        "key": "6m",
+        "title": "6 months before",
+        "order": 4,
+        "tasks": [
+          { "title": "Order invitations and stationery", "assignee": "client", "isSkeleton": true, "weight": 3, "order": 1 },
+          { "title": "Plan honeymoon", "assignee": "client", "weight": 1, "order": 2 },
+          { "title": "Shop for rings", "assignee": "client", "weight": 1, "order": 3 },
+          { "title": "Book transportation", "assignee": "client", "weight": 1, "order": 4 },
+          { "title": "Finalize ceremony details with officiant", "assignee": "client", "weight": 1, "order": 5 },
+          { "title": "Schedule dress fittings", "assignee": "client", "weight": 1, "order": 6 }
+        ]
+      },
+      {
+        "key": "4m",
+        "title": "4 months before",
+        "order": 5,
+        "tasks": [
+          { "title": "Mail invitations", "assignee": "client", "isSkeleton": true, "weight": 3, "order": 1 },
+          { "title": "Apply for marriage license", "assignee": "client", "weight": 1, "order": 2 },
+          { "title": "Finalize readings and vows", "assignee": "client", "weight": 1, "order": 3 },
+          { "title": "Plan rehearsal dinner", "assignee": "client", "weight": 1, "order": 4 },
+          { "title": "Order wedding party attire", "assignee": "client", "weight": 1, "order": 5 },
+          { "title": "Create seating chart", "assignee": "both", "weight": 1, "order": 6 }
+        ]
+      },
+      {
+        "key": "2m",
+        "title": "2 months before",
+        "order": 6,
+        "tasks": [
+          { "title": "Final venue walk-through", "assignee": "both", "weight": 1, "order": 1 },
+          { "title": "Confirm all vendor bookings", "assignee": "js", "weight": 1, "order": 2 },
+          { "title": "Purchase accessories and shoes", "assignee": "client", "weight": 1, "order": 3 },
+          { "title": "Finalize song list with band/DJ", "assignee": "client", "weight": 1, "order": 4 },
+          { "title": "Write toasts and speeches", "assignee": "client", "weight": 1, "order": 5 },
+          { "title": "Schedule final dress fitting", "assignee": "client", "weight": 1, "order": 6 }
+        ]
+      },
+      {
+        "key": "1m",
+        "title": "1 month before",
+        "order": 7,
+        "tasks": [
+          { "title": "Send timeline to all vendors", "assignee": "js", "weight": 1, "order": 1 },
+          { "title": "Finalize seating chart and place cards", "assignee": "both", "isSkeleton": true, "weight": 3, "order": 2 },
+          { "title": "Confirm final headcount with caterer", "assignee": "js", "weight": 1, "order": 3 },
+          { "title": "Break in wedding shoes", "assignee": "client", "weight": 1, "order": 4 },
+          { "title": "Prepare payment envelopes for vendors", "assignee": "client", "weight": 1, "order": 5 },
+          { "title": "Rehearsal with wedding party", "assignee": "both", "weight": 1, "order": 6 }
+        ]
+      },
+      {
+        "key": "2w",
+        "title": "2 weeks before",
+        "order": 8,
+        "tasks": [
+          { "title": "Confirm all vendor arrival times", "assignee": "js", "weight": 1, "order": 1 },
+          { "title": "Final dress fitting and pickup", "assignee": "client", "weight": 1, "order": 2 },
+          { "title": "Pack for honeymoon", "assignee": "client", "weight": 1, "order": 3 },
+          { "title": "Prepare emergency kit", "assignee": "client", "weight": 1, "order": 4 },
+          { "title": "Get manicure and hair trial", "assignee": "client", "weight": 1, "order": 5 },
+          { "title": "Delegate day-of tasks to wedding party", "assignee": "client", "weight": 1, "order": 6 }
+        ]
+      }
+    ]
+  },
+  {
+    "templateKey": "bar_mitzvah",
+    "title": "Bar Mitzvah 12-Month Timeline",
+    "description": "Complete Bar Mitzvah planning timeline from 12 months to 2 weeks before",
+    "backgroundUrl": "https://images.pexels.com/photos/8853508/pexels-photo-8853508.jpeg",
+    "blocks": [
+      {
+        "key": "12m",
+        "title": "12 months before",
+        "order": 1,
+        "tasks": [
+          { "title": "Set Bar Mitzvah date with synagogue", "assignee": "client", "isSkeleton": true, "weight": 3, "order": 1 },
+          { "title": "Hire an event planner", "assignee": "client", "isSkeleton": true, "weight": 3, "order": 2 },
+          { "title": "Reserve synagogue for ceremony", "assignee": "client", "isSkeleton": true, "weight": 3, "order": 3 },
+          { "title": "Work out global budget including VAT", "assignee": "client", "weight": 1, "order": 4 },
+          { "title": "Decide guest numbers", "assignee": "client", "weight": 1, "order": 5 },
+          { "title": "Look at reception venues", "assignee": "client", "weight": 1, "order": 6 },
+          { "title": "First meeting with JustSeventy", "assignee": "both", "weight": 1, "order": 7 },
+          { "title": "Compile guest list and addresses", "assignee": "client", "weight": 1, "order": 8 },
+          { "title": "Book reception venue", "assignee": "client", "isSkeleton": true, "weight": 3, "order": 9 },
+          { "title": "Send save-the-dates", "assignee": "client", "isSkeleton": true, "weight": 3, "order": 10 },
+          { "title": "Start Torah portion study", "assignee": "client", "weight": 1, "order": 11 }
+        ]
+      },
+      {
+        "key": "10m",
+        "title": "10 months before",
+        "order": 2,
+        "tasks": [
+          { "title": "Book photographer and videographer", "assignee": "client", "isSkeleton": true, "weight": 3, "order": 1 },
+          { "title": "Research and book band/DJ", "assignee": "client", "weight": 1, "order": 2 },
+          { "title": "Schedule aliyah honors with rabbi", "assignee": "client", "weight": 1, "order": 3 },
+          { "title": "Order kippot with custom design", "assignee": "client", "weight": 1, "order": 4 },
+          { "title": "Plan party theme and decor", "assignee": "both", "weight": 1, "order": 5 },
+          { "title": "Register for gifts", "assignee": "client", "weight": 1, "order": 6 }
+        ]
+      },
+      {
+        "key": "8m",
+        "title": "8 months before",
+        "order": 3,
+        "tasks": [
+          { "title": "Book florist", "assignee": "client", "weight": 1, "order": 1 },
+          { "title": "Select suit or outfit", "assignee": "client", "weight": 1, "order": 2 },
+          { "title": "Plan Kiddush details with synagogue", "assignee": "client", "weight": 1, "order": 3 },
+          { "title": "Finalize menu with caterer", "assignee": "client", "weight": 1, "order": 4 },
+          { "title": "Book dancers or entertainment", "assignee": "client", "weight": 1, "order": 5 },
+          { "title": "Order tallit and tallit bag", "assignee": "client", "weight": 1, "order": 6 }
+        ]
+      },
+      {
+        "key": "6m",
+        "title": "6 months before",
+        "order": 4,
+        "tasks": [
+          { "title": "Order invitations and stationery", "assignee": "client", "isSkeleton": true, "weight": 3, "order": 1 },
+          { "title": "Book transportation", "assignee": "client", "weight": 1, "order": 2 },
+          { "title": "Arrange accommodation for guests", "assignee": "client", "weight": 1, "order": 3 },
+          { "title": "Create Montage video (if desired)", "assignee": "client", "weight": 1, "order": 4 },
+          { "title": "Schedule suit fittings", "assignee": "client", "weight": 1, "order": 5 },
+          { "title": "Continue Torah portion practice", "assignee": "client", "weight": 1, "order": 6 }
+        ]
+      },
+      {
+        "key": "4m",
+        "title": "4 months before",
+        "order": 5,
+        "tasks": [
+          { "title": "Mail invitations", "assignee": "client", "isSkeleton": true, "weight": 3, "order": 1 },
+          { "title": "Confirm synagogue call-up schedule", "assignee": "client", "weight": 1, "order": 2 },
+          { "title": "Write Bar Mitzvah speech", "assignee": "client", "weight": 1, "order": 3 },
+          { "title": "Plan Friday night dinner (if applicable)", "assignee": "client", "weight": 1, "order": 4 },
+          { "title": "Order centerpieces and decor", "assignee": "both", "weight": 1, "order": 5 },
+          { "title": "Create seating chart", "assignee": "both", "weight": 1, "order": 6 }
+        ]
+      },
+      {
+        "key": "2m",
+        "title": "2 months before",
+        "order": 6,
+        "tasks": [
+          { "title": "Final venue walk-through", "assignee": "both", "weight": 1, "order": 1 },
+          { "title": "Confirm all vendor bookings", "assignee": "js", "weight": 1, "order": 2 },
+          { "title": "Order party favors", "assignee": "client", "weight": 1, "order": 3 },
+          { "title": "Finalize song list with DJ/band", "assignee": "client", "weight": 1, "order": 4 },
+          { "title": "Plan Havdalah ceremony (if Saturday night)", "assignee": "client", "weight": 1, "order": 5 },
+          { "title": "Final suit fitting", "assignee": "client", "weight": 1, "order": 6 }
+        ]
+      },
+      {
+        "key": "1m",
+        "title": "1 month before",
+        "order": 7,
+        "tasks": [
+          { "title": "Send timeline to all vendors", "assignee": "js", "weight": 1, "order": 1 },
+          { "title": "Finalize seating chart and place cards", "assignee": "both", "isSkeleton": true, "weight": 3, "order": 2 },
+          { "title": "Confirm final headcount with caterer", "assignee": "js", "weight": 1, "order": 3 },
+          { "title": "Practice Torah reading with cantor", "assignee": "client", "weight": 1, "order": 4 },
+          { "title": "Prepare payment envelopes for vendors", "assignee": "client", "weight": 1, "order": 5 },
+          { "title": "Rehearsal at synagogue", "assignee": "client", "weight": 1, "order": 6 }
+        ]
+      },
+      {
+        "key": "2w",
+        "title": "2 weeks before",
+        "order": 8,
+        "tasks": [
+          { "title": "Confirm all vendor arrival times", "assignee": "js", "weight": 1, "order": 1 },
+          { "title": "Final suit pickup", "assignee": "client", "weight": 1, "order": 2 },
+          { "title": "Distribute kippot to guests (if pre-distributing)", "assignee": "client", "weight": 1, "order": 3 },
+          { "title": "Prepare emergency kit", "assignee": "client", "weight": 1, "order": 4 },
+          { "title": "Practice full ceremony", "assignee": "client", "weight": 1, "order": 5 },
+          { "title": "Confirm Kiddush arrangements", "assignee": "client", "weight": 1, "order": 6 }
+        ]
+      }
+    ]
+  },
+  {
+    "templateKey": "bat_mitzvah",
+    "title": "Bat Mitzvah 12-Month Timeline",
+    "description": "Complete Bat Mitzvah planning timeline from 12 months to 2 weeks before",
+    "backgroundUrl": "https://images.pexels.com/photos/8853509/pexels-photo-8853509.jpeg",
+    "blocks": [
+      {
+        "key": "12m",
+        "title": "12 months before",
+        "order": 1,
+        "tasks": [
+          { "title": "Set Bat Mitzvah date with synagogue", "assignee": "client", "isSkeleton": true, "weight": 3, "order": 1 },
+          { "title": "Hire an event planner", "assignee": "client", "isSkeleton": true, "weight": 3, "order": 2 },
+          { "title": "Reserve synagogue for ceremony", "assignee": "client", "isSkeleton": true, "weight": 3, "order": 3 },
+          { "title": "Work out global budget including VAT", "assignee": "client", "weight": 1, "order": 4 },
+          { "title": "Decide guest numbers", "assignee": "client", "weight": 1, "order": 5 },
+          { "title": "Look at reception venues", "assignee": "client", "weight": 1, "order": 6 },
+          { "title": "First meeting with JustSeventy", "assignee": "both", "weight": 1, "order": 7 },
+          { "title": "Compile guest list and addresses", "assignee": "client", "weight": 1, "order": 8 },
+          { "title": "Book reception venue", "assignee": "client", "isSkeleton": true, "weight": 3, "order": 9 },
+          { "title": "Send save-the-dates", "assignee": "client", "isSkeleton": true, "weight": 3, "order": 10 },
+          { "title": "Start Torah portion study", "assignee": "client", "weight": 1, "order": 11 }
+        ]
+      },
+      {
+        "key": "10m",
+        "title": "10 months before",
+        "order": 2,
+        "tasks": [
+          { "title": "Book photographer and videographer", "assignee": "client", "isSkeleton": true, "weight": 3, "order": 1 },
+          { "title": "Research and book band/DJ", "assignee": "client", "weight": 1, "order": 2 },
+          { "title": "Schedule aliyah honors with rabbi", "assignee": "client", "weight": 1, "order": 3 },
+          { "title": "Order kippot with custom design", "assignee": "client", "weight": 1, "order": 4 },
+          { "title": "Plan party theme and decor", "assignee": "both", "weight": 1, "order": 5 },
+          { "title": "Register for gifts", "assignee": "client", "weight": 1, "order": 6 }
+        ]
+      },
+      {
+        "key": "8m",
+        "title": "8 months before",
+        "order": 3,
+        "tasks": [
+          { "title": "Book florist", "assignee": "client", "weight": 1, "order": 1 },
+          { "title": "Select dress or outfit", "assignee": "client", "weight": 1, "order": 2 },
+          { "title": "Plan Kiddush details with synagogue", "assignee": "client", "weight": 1, "order": 3 },
+          { "title": "Finalize menu with caterer", "assignee": "client", "weight": 1, "order": 4 },
+          { "title": "Book dancers or entertainment", "assignee": "client", "weight": 1, "order": 5 },
+          { "title": "Order tallit and tallit bag", "assignee": "client", "weight": 1, "order": 6 }
+        ]
+      },
+      {
+        "key": "6m",
+        "title": "6 months before",
+        "order": 4,
+        "tasks": [
+          { "title": "Order invitations and stationery", "assignee": "client", "isSkeleton": true, "weight": 3, "order": 1 },
+          { "title": "Book transportation", "assignee": "client", "weight": 1, "order": 2 },
+          { "title": "Arrange accommodation for guests", "assignee": "client", "weight": 1, "order": 3 },
+          { "title": "Create Montage video (if desired)", "assignee": "client", "weight": 1, "order": 4 },
+          { "title": "Schedule dress fittings", "assignee": "client", "weight": 1, "order": 5 },
+          { "title": "Continue Torah portion practice", "assignee": "client", "weight": 1, "order": 6 },
+          { "title": "Plan Friday night dinner or weekend events", "assignee": "client", "weight": 1, "order": 7 }
+        ]
+      },
+      {
+        "key": "4m",
+        "title": "4 months before",
+        "order": 5,
+        "tasks": [
+          { "title": "Mail invitations", "assignee": "client", "isSkeleton": true, "weight": 3, "order": 1 },
+          { "title": "Confirm synagogue call-up schedule", "assignee": "client", "weight": 1, "order": 2 },
+          { "title": "Write Bat Mitzvah speech", "assignee": "client", "weight": 1, "order": 3 },
+          { "title": "Plan Friday night Shabbat dinner", "assignee": "client", "weight": 1, "order": 4 },
+          { "title": "Order centerpieces and decor", "assignee": "both", "weight": 1, "order": 5 },
+          { "title": "Create seating chart", "assignee": "both", "weight": 1, "order": 6 }
+        ]
+      },
+      {
+        "key": "2m",
+        "title": "2 months before",
+        "order": 6,
+        "tasks": [
+          { "title": "Final venue walk-through", "assignee": "both", "weight": 1, "order": 1 },
+          { "title": "Confirm all vendor bookings", "assignee": "js", "weight": 1, "order": 2 },
+          { "title": "Order party favors", "assignee": "client", "weight": 1, "order": 3 },
+          { "title": "Finalize song list with DJ/band", "assignee": "client", "weight": 1, "order": 4 },
+          { "title": "Book hair and makeup artists", "assignee": "client", "weight": 1, "order": 5 },
+          { "title": "Final dress fitting", "assignee": "client", "weight": 1, "order": 6 }
+        ]
+      },
+      {
+        "key": "1m",
+        "title": "1 month before",
+        "order": 7,
+        "tasks": [
+          { "title": "Send timeline to all vendors", "assignee": "js", "weight": 1, "order": 1 },
+          { "title": "Finalize seating chart and place cards", "assignee": "both", "isSkeleton": true, "weight": 3, "order": 2 },
+          { "title": "Confirm final headcount with caterer", "assignee": "js", "weight": 1, "order": 3 },
+          { "title": "Practice Torah reading with cantor", "assignee": "client", "weight": 1, "order": 4 },
+          { "title": "Prepare payment envelopes for vendors", "assignee": "client", "weight": 1, "order": 5 },
+          { "title": "Rehearsal at synagogue", "assignee": "client", "weight": 1, "order": 6 }
+        ]
+      },
+      {
+        "key": "2w",
+        "title": "2 weeks before",
+        "order": 8,
+        "tasks": [
+          { "title": "Confirm all vendor arrival times", "assignee": "js", "weight": 1, "order": 1 },
+          { "title": "Final dress pickup", "assignee": "client", "weight": 1, "order": 2 },
+          { "title": "Distribute kippot to guests (if pre-distributing)", "assignee": "client", "weight": 1, "order": 3 },
+          { "title": "Prepare emergency kit", "assignee": "client", "weight": 1, "order": 4 },
+          { "title": "Get hair and makeup trial", "assignee": "client", "weight": 1, "order": 5 },
+          { "title": "Practice full ceremony", "assignee": "client", "weight": 1, "order": 6 },
+          { "title": "Confirm Kiddush arrangements", "assignee": "client", "weight": 1, "order": 7 }
+        ]
+      }
+    ]
+  },
+  {
+    "templateKey": "party",
+    "title": "Party 12-Month Timeline",
+    "description": "Comprehensive party planning timeline from 12 months to 2 weeks before",
+    "backgroundUrl": "https://images.pexels.com/photos/1190298/pexels-photo-1190298.jpeg",
+    "blocks": [
+      {
+        "key": "12m",
+        "title": "12 months before",
+        "order": 1,
+        "tasks": [
+          { "title": "Set party date", "assignee": "client", "isSkeleton": true, "weight": 3, "order": 1 },
+          { "title": "Hire an event planner", "assignee": "client", "isSkeleton": true, "weight": 3, "order": 2 },
+          { "title": "Decide on party type and theme", "assignee": "client", "isSkeleton": true, "weight": 3, "order": 3 },
+          { "title": "Work out global budget including VAT", "assignee": "client", "weight": 1, "order": 4 },
+          { "title": "Decide guest numbers", "assignee": "client", "weight": 1, "order": 5 },
+          { "title": "Look at venues", "assignee": "client", "weight": 1, "order": 6 },
+          { "title": "First meeting with JustSeventy", "assignee": "both", "weight": 1, "order": 7 },
+          { "title": "Compile guest list and addresses", "assignee": "client", "weight": 1, "order": 8 },
+          { "title": "Book venue", "assignee": "client", "isSkeleton": true, "weight": 3, "order": 9 },
+          { "title": "Send save-the-dates", "assignee": "client", "isSkeleton": true, "weight": 3, "order": 10 }
+        ]
+      },
+      {
+        "key": "10m",
+        "title": "10 months before",
+        "order": 2,
+        "tasks": [
+          { "title": "Book photographer and videographer", "assignee": "client", "isSkeleton": true, "weight": 3, "order": 1 },
+          { "title": "Research and book band/DJ", "assignee": "client", "weight": 1, "order": 2 },
+          { "title": "Plan party theme and decor concept", "assignee": "both", "weight": 1, "order": 3 },
+          { "title": "Create mood board", "assignee": "both", "weight": 1, "order": 4 },
+          { "title": "Book entertainment acts", "assignee": "client", "weight": 1, "order": 5 }
+        ]
+      },
+      {
+        "key": "8m",
+        "title": "8 months before",
+        "order": 3,
+        "tasks": [
+          { "title": "Book florist and decor team", "assignee": "client", "weight": 1, "order": 1 },
+          { "title": "Finalize menu with caterer", "assignee": "client", "weight": 1, "order": 2 },
+          { "title": "Choose bar/drinks package", "assignee": "client", "weight": 1, "order": 3 },
+          { "title": "Book special performers or speakers", "assignee": "client", "weight": 1, "order": 4 },
+          { "title": "Design custom elements (if needed)", "assignee": "both", "weight": 1, "order": 5 }
+        ]
+      },
+      {
+        "key": "6m",
+        "title": "6 months before",
+        "order": 4,
+        "tasks": [
+          { "title": "Order invitations and stationery", "assignee": "client", "isSkeleton": true, "weight": 3, "order": 1 },
+          { "title": "Book transportation", "assignee": "client", "weight": 1, "order": 2 },
+          { "title": "Arrange accommodation for guests", "assignee": "client", "weight": 1, "order": 3 },
+          { "title": "Plan party timeline and flow", "assignee": "both", "weight": 1, "order": 4 },
+          { "title": "Book lighting designer", "assignee": "client", "weight": 1, "order": 5 }
+        ]
+      },
+      {
+        "key": "4m",
+        "title": "4 months before",
+        "order": 5,
+        "tasks": [
+          { "title": "Mail invitations", "assignee": "client", "isSkeleton": true, "weight": 3, "order": 1 },
+          { "title": "Order custom decor elements", "assignee": "both", "weight": 1, "order": 2 },
+          { "title": "Plan speeches and toasts", "assignee": "client", "weight": 1, "order": 3 },
+          { "title": "Choose party favors", "assignee": "client", "weight": 1, "order": 4 },
+          { "title": "Create seating chart", "assignee": "both", "weight": 1, "order": 5 }
+        ]
+      },
+      {
+        "key": "2m",
+        "title": "2 months before",
+        "order": 6,
+        "tasks": [
+          { "title": "Final venue walk-through", "assignee": "both", "weight": 1, "order": 1 },
+          { "title": "Confirm all vendor bookings", "assignee": "js", "weight": 1, "order": 2 },
+          { "title": "Order party supplies", "assignee": "client", "weight": 1, "order": 3 },
+          { "title": "Finalize music playlist with DJ/band", "assignee": "client", "weight": 1, "order": 4 },
+          { "title": "Confirm special dietary requirements", "assignee": "both", "weight": 1, "order": 5 }
+        ]
+      },
+      {
+        "key": "1m",
+        "title": "1 month before",
+        "order": 7,
+        "tasks": [
+          { "title": "Send timeline to all vendors", "assignee": "js", "weight": 1, "order": 1 },
+          { "title": "Finalize seating chart and place cards", "assignee": "both", "isSkeleton": true, "weight": 3, "order": 2 },
+          { "title": "Confirm final headcount with caterer", "assignee": "js", "weight": 1, "order": 3 },
+          { "title": "Prepare signage and printed materials", "assignee": "both", "weight": 1, "order": 4 },
+          { "title": "Prepare payment envelopes for vendors", "assignee": "client", "weight": 1, "order": 5 }
+        ]
+      },
+      {
+        "key": "2w",
+        "title": "2 weeks before",
+        "order": 8,
+        "tasks": [
+          { "title": "Confirm all vendor arrival times", "assignee": "js", "weight": 1, "order": 1 },
+          { "title": "Finalize outfit and accessories", "assignee": "client", "weight": 1, "order": 2 },
+          { "title": "Prepare emergency kit", "assignee": "client", "weight": 1, "order": 3 },
+          { "title": "Final check on all decor elements", "assignee": "js", "weight": 1, "order": 4 },
+          { "title": "Coordinate setup schedule", "assignee": "js", "weight": 1, "order": 5 }
+        ]
+      }
+    ]
+  }
+]
