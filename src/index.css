@@ -62,7 +62,25 @@
   }
 }
 
+@page {
+  size: A4;
+  margin: 12mm;
+}
+
 @media print {
+  html, body, #root {
+    font-size: 10pt !important;
+    line-height: 1.4;
+    font-family: system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif;
+  }
+
+  h1, h2, h3, h4, h5, h6,
+  .task-title,
+  .task-desc,
+  .task-meta {
+    font-size: 10pt !important;
+  }
+
   .print-header {
     display: flex;
     align-items: center;
@@ -70,6 +88,8 @@
     border-bottom: 1px solid #ddd;
     padding-bottom: 0.5rem;
     margin-bottom: 0.75rem;
+    font-size: 11pt !important;
+    font-weight: 600;
   }
 
   .print-header img {
@@ -90,21 +110,78 @@
     position: absolute !important;
   }
 
-  .backdrop-blur {
-    backdrop-filter: none !important;
+  .block-card,
+  .task-card {
+    background: rgba(255, 255, 255, 0.78) !important;
+    backdrop-filter: blur(1px) !important;
+    -webkit-backdrop-filter: blur(1px) !important;
+    border-radius: 10px !important;
+    padding: 8px 10px !important;
+    break-inside: avoid;
+    page-break-inside: avoid;
+    -webkit-column-break-inside: avoid;
+    margin-bottom: 6mm;
   }
 
-  .bg-white\/95 {
-    background-color: white !important;
+  .block-title {
+    font-size: 11pt !important;
+    font-weight: 700 !important;
+    margin: 0 0 4mm 0;
+    padding-bottom: 2mm;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.08);
   }
 
-  .bg-white\/90 {
-    background-color: white !important;
+  .print-columns {
+    column-count: 2;
+    column-gap: 12mm;
+  }
+
+  .print-kpis {
+    display: flex;
+    gap: 10mm;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: nowrap;
+    margin: 0 0 8mm 0;
+  }
+
+  .print-kpis .kpi {
+    flex: 1 1 0;
+    min-width: 0;
+    text-align: center;
+  }
+
+  .print-block {
+    break-inside: avoid;
+    page-break-inside: avoid;
+    -webkit-column-break-inside: avoid;
+    margin: 0 0 6mm 0;
+    padding: 6mm;
+  }
+
+  .task-desc,
+  .task-meta {
+    break-inside: avoid;
   }
 
   .shadow-lg {
     box-shadow: none !important;
-    border: 1px solid #e5e7eb !important;
+    border: 1px solid rgba(0, 0, 0, 0.08) !important;
+  }
+
+  .space-y-2,
+  .space-y-3,
+  .space-y-4 {
+    display: block !important;
+  }
+
+  .px-6.pb-6,
+  .px-6.pb-6.space-y-2,
+  .px-6.pb-6.space-y-3 {
+    display: block !important;
+    padding-left: 0 !important;
+    padding-right: 0 !important;
+    padding-bottom: 0 !important;
   }
 
   button {

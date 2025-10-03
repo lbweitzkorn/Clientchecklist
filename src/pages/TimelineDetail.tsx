@@ -535,8 +535,8 @@ export function TimelineDetail() {
             </div>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-4">
-            <div className="bg-gray-50 rounded-lg p-4 flex flex-col items-center">
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-4 print-kpis">
+            <div className="bg-gray-50 rounded-lg p-4 flex flex-col items-center kpi">
               <ProgressRing percentage={progress?.percentage || 0} size={70} strokeWidth={7} />
               <div className="text-sm text-gray-600 text-center font-medium mt-2">
                 Overall Progress
@@ -546,7 +546,7 @@ export function TimelineDetail() {
               </div>
             </div>
 
-            <div className="bg-blue-50 rounded-lg p-4 flex flex-col items-center">
+            <div className="bg-blue-50 rounded-lg p-4 flex flex-col items-center kpi">
               <ProgressRing percentage={progressByAssignee.client.percentage} size={70} strokeWidth={7} color="#3b82f6" />
               <div className="text-sm text-blue-700 text-center font-medium mt-2">
                 Client Tasks
@@ -556,7 +556,7 @@ export function TimelineDetail() {
               </div>
             </div>
 
-            <div className="bg-purple-50 rounded-lg p-4 flex flex-col items-center">
+            <div className="bg-purple-50 rounded-lg p-4 flex flex-col items-center kpi">
               <ProgressRing percentage={progressByAssignee.js.percentage} size={70} strokeWidth={7} color="#a855f7" />
               <div className="text-sm text-purple-700 text-center font-medium mt-2">
                 JustSeventy Tasks
@@ -566,7 +566,7 @@ export function TimelineDetail() {
               </div>
             </div>
 
-            <div className="bg-green-50 rounded-lg p-4 flex flex-col items-center">
+            <div className="bg-green-50 rounded-lg p-4 flex flex-col items-center kpi">
               <ProgressRing percentage={progressByAssignee.both.percentage} size={70} strokeWidth={7} color="#10b981" />
               <div className="text-sm text-green-700 text-center font-medium mt-2">
                 Joint Tasks
@@ -719,16 +719,17 @@ export function TimelineDetail() {
           </div>
         </div>
 
-        <div className="space-y-4">
+        <div className="space-y-4 print-columns">
           {timeline.blocks?.map((block) => {
             const blockProgress = block.tasks ? calculateBlockProgress(block.tasks) : null;
             const isExpanded = expandedBlocks.has(block.id);
 
             return (
-              <div key={block.id} className="block-card border border-gray-200">
+              <div key={block.id} className="block-card border border-gray-200 print-block">
+                <h2 className="block-title hidden print:block">{block.title}</h2>
                 <button
                   onClick={() => toggleBlock(block.id)}
-                  className="w-full flex items-center justify-between p-6 text-left hover:bg-gray-50 transition-colors"
+                  className="w-full flex items-center justify-between p-6 text-left hover:bg-gray-50 transition-colors print:hidden"
                 >
                   <div className="flex items-center gap-4 flex-1">
                     {blockProgress && <ProgressRing percentage={blockProgress.percentage} />}
@@ -749,19 +750,19 @@ export function TimelineDetail() {
                     {block.tasks.filter(isTaskVisible).map((task) => (
                       <div
                         key={task.id}
-                        className="flex items-start gap-3 p-3 rounded-lg hover:bg-gray-50 transition-colors"
+                        className="task-card flex items-start gap-3 p-3 rounded-lg hover:bg-gray-50 transition-colors"
                       >
                         <input
                           type="checkbox"
                           checked={task.done}
                           onChange={() => handleTaskToggle(task)}
-                          className="mt-1 w-5 h-5 rounded border-gray-300 text-blue-600 focus:ring-blue-500 cursor-pointer"
+                          className="mt-1 w-5 h-5 rounded border-gray-300 text-blue-600 focus:ring-blue-500 cursor-pointer print:w-4 print:h-4"
                         />
                         <div className="flex-1">
-                          <p className={`text-gray-900 ${task.done ? 'line-through opacity-60' : ''}`}>
+                          <p className={`task-title text-gray-900 ${task.done ? 'line-through opacity-60' : ''}`}>
                             {task.title}
                           </p>
-                          <div className="flex items-center gap-2 mt-1">
+                          <div className="task-meta flex items-center gap-2 mt-1">
                             <button
                               onClick={() => handleAssigneeChange(task)}
                               className={`px-2 py-0.5 text-xs font-medium rounded transition-all hover:ring-2 hover:ring-offset-1 ${getAssigneeColor(task.assignee)} ${
