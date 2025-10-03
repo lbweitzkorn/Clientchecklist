@@ -55,6 +55,7 @@ export interface Task {
   done_at?: string;
   locked?: boolean;
   depends_on_task_ids?: string[];
+  overdue_on_original_plan?: boolean;
   order: number;
   created_at: string;
   updated_at: string;

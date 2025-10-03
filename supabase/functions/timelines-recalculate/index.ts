@@ -1,4 +1,8 @@
 import { createClient } from 'npm:@supabase/supabase-js@2.57.4';
+import {
+  addMonths, subMonths, addDays, subDays, differenceInCalendarDays,
+  startOfWeek, isBefore, isAfter, max as maxDate, min as minDate, parseISO
+} from 'npm:date-fns@4.1.0';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -6,26 +10,37 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'Content-Type, Authorization, X-Client-Info, Apikey',
 };
 
+type Distribution = 'frontload' | 'balanced' | 'even';
+
 interface Task {
   id: string;
+  block_id: string;
   title: string;
-  weight: number;
   is_skeleton: boolean;
+  weight: number;
   locked?: boolean;
   due_date?: string;
-  done?: boolean;
   depends_on_task_ids?: string[];
-  order: number;
 }
 
 interface Block {
   id: string;
-  key: string;
   title: string;
+  key: string;
   order: number;
-  start_date?: string;
-  end_date?: string;
   tasks?: Task[];
+}
+
+interface TemplateBlock {
+  months_before_start: number;
+  months_before_end: number;
+}
+
+interface RecalcResult {
+  updated: number;
+  skippedLocked: number;
+  scaleFactor: number;
+  notes: string[];
 }
 
 const CANONICAL_BLOCKS: Record<string, { start: number; end: number }> = {
@@ -37,29 +52,6 @@ const CANONICAL_BLOCKS: Record<string, { start: number; end: number }> = {
   '1-2m': { start: 2, end: 1 },
   '2w': { start: 0.5, end: 0 },
 };
-
-function calculateLeadTimeMonths(eventDate: Date, today: Date = new Date()): number {
-  const daysBetween = Math.ceil((eventDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
-  return Math.max(Math.ceil(daysBetween / 30), 0);
-}
-
-function calculateScaleFactor(leadTimeMonths: number, canonicalMonths: number = 12): number {
-  return leadTimeMonths / canonicalMonths;
-}
-
-function addMonths(date: Date, months: number): Date {
-  const result = new Date(date);
-  result.setMonth(result.getMonth() - months);
-  return result;
-}
-
-function roundToWeek(date: Date): Date {
-  const result = new Date(date);
-  const day = result.getDay();
-  const diff = day === 0 ? 0 : day;
-  result.setDate(result.getDate() - diff);
-  return result;
-}
 
 function getCanonicalOffsets(blockKey: string): { start: number; end: number } | null {
   for (const [key, offsets] of Object.entries(CANONICAL_BLOCKS)) {
@@ -84,185 +76,179 @@ function getCanonicalOffsets(blockKey: string): { start: number; end: number } |
   return null;
 }
 
-function recalculateBlockDates(
-  eventDate: Date,
-  blocks: Block[],
-  scaleFactor: number,
-  today: Date = new Date()
-): Array<{ id: string; start_date: string; end_date: string }> {
-  const result: Array<{ id: string; start_date: string; end_date: string }> = [];
-  let previousEnd: Date | null = null;
+function recalcTimelineDates(opts: {
+  eventDateISO: string;
+  todayISO?: string;
+  blocks: Array<Block & { monthsBeforeStart: number; monthsBeforeEnd: number }>;
+  tasks: Task[];
+  distribution?: Distribution;
+  respectLocks?: boolean;
+  graceDays?: number;
+}): { tasks: Array<{ id: string; due_date: string; overdue_on_original_plan?: boolean }>; blocks: Array<{ id: string; start_date: string; end_date: string }>; result: RecalcResult } {
+  const {
+    eventDateISO,
+    todayISO = new Date().toISOString(),
+    blocks,
+    tasks: inputTasks,
+    distribution = 'frontload',
+    respectLocks = true,
+    graceDays = 2,
+  } = opts;
 
-  for (const block of blocks) {
-    const offsets = getCanonicalOffsets(block.key);
-    if (!offsets) {
-      continue;
+  const eventDate = parseISO(eventDateISO);
+  const today = parseISO(todayISO);
+
+  const ltDays = Math.max(differenceInCalendarDays(eventDate, today), 0);
+  const LTmonths = ltDays / 30.437;
+  const S = Math.min(Math.max(LTmonths / 12, 0), 2);
+
+  const notes: string[] = [];
+  if (LTmonths < 2) notes.push('Compressed schedule: weekly mode suggested');
+
+  const scaledWindows = blocks.map(b => {
+    const start = startOfWeek(subMonths(eventDate, Math.round(b.monthsBeforeStart * S)), { weekStartsOn: 1 });
+    const endRaw = subMonths(eventDate, Math.round(b.monthsBeforeEnd * S));
+    const end = startOfWeek(endRaw, { weekStartsOn: 1 });
+    const safeEnd = !isBefore(end, start) ? end : addDays(start, 7);
+    return {
+      blockId: b.id,
+      start,
+      end: safeEnd,
+      start_date: toISODate(start),
+      end_date: toISODate(safeEnd)
+    };
+  });
+
+  const byBlock = new Map<string, Task[]>();
+  inputTasks.forEach(t => {
+    const arr = byBlock.get(t.block_id) || [];
+    arr.push(t);
+    byBlock.set(t.block_id, arr);
+  });
+
+  let updated = 0;
+  let skippedLocked = 0;
+  const idToTask = new Map(inputTasks.map(t => [t.id, t]));
+  const updatedTasks: Array<{ id: string; due_date: string; overdue_on_original_plan?: boolean }> = [];
+
+  scaledWindows.forEach(win => {
+    const blockTasks = (byBlock.get(win.blockId) || []).slice();
+
+    const lockedTasks = blockTasks.filter(t => t.locked && t.due_date);
+    const unlockedTasks = blockTasks.filter(t => !(respectLocks && t.locked));
+
+    unlockedTasks.sort((a, b) =>
+      (Number(b.is_skeleton) - Number(a.is_skeleton)) ||
+      (b.weight - a.weight) ||
+      a.title.localeCompare(b.title)
+    );
+
+    const anchors = lockedTasks
+      .map(t => ({ t, d: parseISO(t.due_date!) }))
+      .sort((a, b) => a.d.getTime() - b.d.getTime());
+
+    type Span = { start: Date; end: Date; tasks: Task[] };
+    const spans: Span[] = [];
+    let cursorStart = win.start;
+
+    anchors.forEach((a, idx) => {
+      const prevEnd = subDays(a.d, 1);
+      if (!isBefore(prevEnd, cursorStart)) {
+        spans.push({ start: cursorStart, end: prevEnd, tasks: [] });
+      }
+      cursorStart = addDays(a.d, 1);
+    });
+    if (!isBefore(win.end, cursorStart)) {
+      spans.push({ start: cursorStart, end: win.end, tasks: [] });
     }
 
-    let startDate = roundToWeek(addMonths(eventDate, offsets.start * scaleFactor));
-    let endDate = roundToWeek(addMonths(eventDate, offsets.end * scaleFactor));
-
-    if (startDate < today) {
-      startDate = new Date(today);
-      startDate.setDate(startDate.getDate() + 2);
-    }
-
-    if (endDate < today) {
-      endDate = new Date(today);
-      endDate.setDate(endDate.getDate() + 3);
-    }
-
-    if (endDate > eventDate) {
-      endDate = new Date(eventDate);
-      endDate.setDate(endDate.getDate() - 1);
-    }
-
-    if (startDate >= endDate) {
-      endDate = new Date(startDate);
-      endDate.setDate(endDate.getDate() + 1);
-    }
-
-    if (previousEnd && startDate < previousEnd) {
-      startDate = new Date(previousEnd);
-    }
-
-    if (startDate >= endDate) {
-      endDate = new Date(startDate);
-      endDate.setDate(endDate.getDate() + 1);
-    }
-
-    result.push({
-      id: block.id,
-      start_date: startDate.toISOString().split('T')[0],
-      end_date: endDate.toISOString().split('T')[0],
+    let idx = 0;
+    unlockedTasks.forEach(t => {
+      if (spans.length === 0) return;
+      spans[idx % spans.length].tasks.push(t);
+      idx++;
     });
 
-    previousEnd = endDate;
-  }
+    spans.forEach(span => {
+      const spanDays = Math.max(differenceInCalendarDays(span.end, span.start), 1);
+      if (span.tasks.length === 0) return;
 
-  return result;
-}
+      const N = span.tasks.length;
 
-function sortTasksForDistribution(tasks: Task[], distribution: string): Task[] {
-  const sorted = [...tasks];
+      const positionForIndex = (i: number): number => {
+        if (distribution === 'even' || distribution === 'balanced') {
+          return Math.round((i / Math.max(N - 1, 1)) * spanDays);
+        } else {
+          const firstHalf = Math.ceil(N / 2);
+          if (i < firstHalf) {
+            const subDaysRange = Math.max(Math.round(0.25 * spanDays), 1);
+            return Math.round((i / Math.max(firstHalf - 1, 1)) * subDaysRange);
+          } else {
+            const j = i - firstHalf;
+            const secondN = N - firstHalf;
+            const startOffset = Math.max(Math.round(0.25 * spanDays), 1);
+            const range = Math.max(spanDays - startOffset, 1);
+            return startOffset + Math.round((j / Math.max(secondN - 1, 1)) * range);
+          }
+        }
+      };
 
-  if (distribution === 'frontload') {
-    sorted.sort((a, b) => {
-      if (a.is_skeleton !== b.is_skeleton) return a.is_skeleton ? -1 : 1;
-      if (a.weight !== b.weight) return b.weight - a.weight;
-      return a.title.localeCompare(b.title);
-    });
-  } else if (distribution === 'even') {
-    sorted.sort((a, b) => a.title.localeCompare(b.title));
-  } else {
-    sorted.sort((a, b) => {
-      if (a.is_skeleton !== b.is_skeleton) return a.is_skeleton ? -1 : 1;
-      if (a.weight !== b.weight) return b.weight - a.weight;
-      return a.title.localeCompare(b.title);
-    });
-  }
+      span.tasks.forEach((t, i) => {
+        const base = addDays(span.start, positionForIndex(i));
 
-  return sorted;
-}
+        let due = base;
+        const deps = (t.depends_on_task_ids || []).map(id => {
+          const dep = idToTask.get(id);
+          return dep?.due_date ? parseISO(dep.due_date) : null;
+        }).filter(Boolean) as Date[];
+        if (deps.length) {
+          const minDue = addDays(deps.reduce((acc, d) => maxDate(acc, d), deps[0]), 1);
+          due = maxDate(due, minDue);
+        }
 
-function distributeTasksInBlock(
-  tasks: Task[],
-  blockStartDate: Date,
-  blockEndDate: Date,
-  distribution: string,
-  respectLocks: boolean
-): Array<{ id: string; due_date: string }> {
-  const result: Array<{ id: string; due_date: string }> = [];
+        due = minDate(maxDate(due, span.start), span.end);
 
-  const unlocked = tasks.filter(t => !respectLocks || !t.locked);
-  const locked = tasks.filter(t => respectLocks && t.locked);
+        let overdueOnOriginalPlan = false;
+        if (isBefore(due, today)) {
+          due = addDays(today, graceDays);
+          overdueOnOriginalPlan = true;
+        }
 
-  for (const task of locked) {
-    if (task.due_date) {
-      result.push({ id: task.id, due_date: task.due_date });
-    }
-  }
-
-  if (unlocked.length === 0) {
-    return result;
-  }
-
-  const sorted = sortTasksForDistribution(unlocked, distribution);
-
-  const totalDays = Math.ceil((blockEndDate.getTime() - blockStartDate.getTime()) / (1000 * 60 * 60 * 24));
-
-  if (totalDays <= 1) {
-    for (const task of sorted) {
-      result.push({
-        id: task.id,
-        due_date: blockStartDate.toISOString().split('T')[0],
+        const prevISO = t.due_date;
+        if (!(respectLocks && t.locked)) {
+          const newDue = toISODate(due);
+          updatedTasks.push({
+            id: t.id,
+            due_date: newDue,
+            ...(overdueOnOriginalPlan && { overdue_on_original_plan: true })
+          });
+          if (newDue !== prevISO) updated++;
+        } else {
+          skippedLocked++;
+          if (t.due_date) {
+            updatedTasks.push({ id: t.id, due_date: t.due_date });
+          }
+        }
       });
-    }
-    return result;
-  }
+    });
 
-  const stride = totalDays / sorted.length;
-
-  sorted.forEach((task, index) => {
-    const offset = distribution === 'frontload' && task.is_skeleton
-      ? Math.floor(stride * index * 0.7)
-      : Math.floor(stride * index);
-
-    const dueDate = new Date(blockStartDate);
-    dueDate.setDate(dueDate.getDate() + offset);
-
-    if (dueDate > blockEndDate) {
-      dueDate.setTime(blockEndDate.getTime());
-    }
-
-    result.push({
-      id: task.id,
-      due_date: dueDate.toISOString().split('T')[0],
+    lockedTasks.forEach(t => {
+      if (t.due_date && !updatedTasks.find(ut => ut.id === t.id)) {
+        updatedTasks.push({ id: t.id, due_date: t.due_date });
+      }
     });
   });
 
-  return result;
+  return {
+    tasks: updatedTasks,
+    blocks: scaledWindows.map(w => ({ id: w.blockId, start_date: w.start_date, end_date: w.end_date })),
+    result: { updated, skippedLocked, scaleFactor: Number(S.toFixed(2)), notes }
+  };
 }
 
-function enforceDependencies(
-  tasks: Array<{ id: string; due_date: string }>,
-  allTasks: Task[]
-): Array<{ id: string; due_date: string }> {
-  const taskMap = new Map(tasks.map(t => [t.id, new Date(t.due_date)]));
-  const taskDetailsMap = new Map(allTasks.map(t => [t.id, t]));
-  let changed = true;
-  let iterations = 0;
-  const maxIterations = 100;
-
-  while (changed && iterations < maxIterations) {
-    changed = false;
-    iterations++;
-
-    for (const task of tasks) {
-      const taskDetails = taskDetailsMap.get(task.id);
-      if (!taskDetails || !taskDetails.depends_on_task_ids) continue;
-
-      const taskDate = taskMap.get(task.id)!;
-
-      for (const depId of taskDetails.depends_on_task_ids) {
-        const depDate = taskMap.get(depId);
-        if (!depDate) continue;
-
-        const minDate = new Date(depDate);
-        minDate.setDate(minDate.getDate() + 1);
-
-        if (taskDate < minDate) {
-          taskMap.set(task.id, minDate);
-          changed = true;
-        }
-      }
-    }
-  }
-
-  return Array.from(taskMap.entries()).map(([id, date]) => ({
-    id,
-    due_date: date.toISOString().split('T')[0],
-  }));
+function toISODate(d: Date): string {
+  const pad = (n: number) => String(n).padStart(2, '0');
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
 }
 
 Deno.serve(async (req: Request) => {
@@ -311,12 +297,16 @@ Deno.serve(async (req: Request) => {
       );
     }
 
-    const eventDate = new Date(timeline.events.date);
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-
-    const leadTimeMonths = calculateLeadTimeMonths(eventDate, today);
-    const scaleFactor = calculateScaleFactor(leadTimeMonths);
+    const eventDate = timeline.events.date;
+    if (!eventDate) {
+      return new Response(
+        JSON.stringify({ error: 'Event date not set' }),
+        {
+          status: 400,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        }
+      );
+    }
 
     const { data: blocks, error: blocksError } = await supabase
       .from('blocks')
@@ -350,36 +340,24 @@ Deno.serve(async (req: Request) => {
       );
     }
 
-    const blocksWithTasks = blocks.map(block => ({
-      ...block,
-      tasks: tasks.filter(t => t.block_id === block.id),
-    }));
+    const blocksWithOffsets = blocks.map(block => {
+      const offsets = getCanonicalOffsets(block.key);
+      return {
+        ...block,
+        monthsBeforeStart: offsets?.start || 0,
+        monthsBeforeEnd: offsets?.end || 0,
+      };
+    });
 
-    const recalculatedBlocks = recalculateBlockDates(eventDate, blocksWithTasks, scaleFactor, today);
+    const result = recalcTimelineDates({
+      eventDateISO: eventDate,
+      blocks: blocksWithOffsets,
+      tasks,
+      distribution: distribution as Distribution,
+      respectLocks,
+    });
 
-    let allTaskUpdates: Array<{ id: string; due_date: string }> = [];
-
-    for (const block of blocksWithTasks) {
-      const blockResult = recalculatedBlocks.find(b => b.id === block.id);
-      if (!blockResult || !block.tasks || block.tasks.length === 0) continue;
-
-      const blockStart = new Date(blockResult.start_date);
-      const blockEnd = new Date(blockResult.end_date);
-
-      const distributedTasks = distributeTasksInBlock(
-        block.tasks,
-        blockStart,
-        blockEnd,
-        distribution,
-        respectLocks
-      );
-
-      allTaskUpdates.push(...distributedTasks);
-    }
-
-    allTaskUpdates = enforceDependencies(allTaskUpdates, tasks);
-
-    for (const blockUpdate of recalculatedBlocks) {
+    for (const blockUpdate of result.blocks) {
       await supabase
         .from('blocks')
         .update({
@@ -389,11 +367,14 @@ Deno.serve(async (req: Request) => {
         .eq('id', blockUpdate.id);
     }
 
-    for (const taskUpdate of allTaskUpdates) {
+    for (const taskUpdate of result.tasks) {
       await supabase
         .from('tasks')
         .update({
           due_date: taskUpdate.due_date,
+          ...(taskUpdate.overdue_on_original_plan !== undefined && {
+            overdue_on_original_plan: taskUpdate.overdue_on_original_plan
+          })
         })
         .eq('id', taskUpdate.id);
     }
@@ -402,7 +383,7 @@ Deno.serve(async (req: Request) => {
       .from('timelines')
       .update({
         last_recalculated_at: new Date().toISOString(),
-        scale_factor: scaleFactor,
+        scale_factor: result.result.scaleFactor,
       })
       .eq('id', timelineId);
 
@@ -413,20 +394,22 @@ Deno.serve(async (req: Request) => {
       actor: 'admin',
       changes: {
         type: 'recalculation',
-        lead_time_months: leadTimeMonths,
-        scale_factor: scaleFactor,
+        scale_factor: result.result.scaleFactor,
         distribution,
         respect_locks: respectLocks,
+        updated: result.result.updated,
+        skipped_locked: result.result.skippedLocked,
+        notes: result.result.notes,
       },
     });
 
     return new Response(
       JSON.stringify({
         success: true,
-        blocks: recalculatedBlocks,
-        tasks: allTaskUpdates,
-        scale_factor: scaleFactor,
-        lead_time_months: leadTimeMonths,
+        updated: result.result.updated,
+        skipped_locked: result.result.skippedLocked,
+        scale_factor: result.result.scaleFactor,
+        notes: result.result.notes,
       }),
       {
         status: 200,
